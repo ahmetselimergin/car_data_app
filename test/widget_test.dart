@@ -1,0 +1,9 @@
+import 'package:car_data_app/main.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  testWidgets('App renders without crashing', (WidgetTester tester) async {
+    await tester.pumpWidget(const CarDataApp());
+    expect(find.text('Garaj'), findsWidgets);
+  });
+}
