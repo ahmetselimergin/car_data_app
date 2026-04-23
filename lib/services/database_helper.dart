@@ -10,7 +10,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
   static const String _dbName = 'car_data.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   static const String tableCars = 'cars';
   static const String tableReminders = 'reminders';
@@ -45,6 +45,13 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE $tableCars ADD COLUMN cardColor INTEGER');
     }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE $tableCars ADD COLUMN km INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute('ALTER TABLE $tableCars ADD COLUMN transmission TEXT');
+      await db.execute('ALTER TABLE $tableCars ADD COLUMN fuelType TEXT');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -56,7 +63,10 @@ class DatabaseHelper {
         model TEXT NOT NULL,
         yil INTEGER NOT NULL,
         imagePath TEXT,
-        cardColor INTEGER
+        cardColor INTEGER,
+        km INTEGER NOT NULL DEFAULT 0,
+        transmission TEXT,
+        fuelType TEXT
       )
     ''');
 

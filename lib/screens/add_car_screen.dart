@@ -12,6 +12,22 @@ import '../services/image_storage_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/car_card_palette.dart';
 
+const List<String> _kTransmissionOptions = <String>[
+  'Manuel',
+  'Otomatik',
+  'Yarı otomatik',
+  'CVT',
+];
+
+const List<String> _kFuelOptions = <String>[
+  'Benzin',
+  'Dizel',
+  'LPG',
+  'Hibrit',
+  'Plug-in hibrit',
+  'Elektrik',
+];
+
 class AddCarScreen extends StatefulWidget {
   const AddCarScreen({super.key, this.existing});
 
@@ -29,10 +45,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
   // Marka katalogda yoksa kullanıcının elle girmesi için.
   late final TextEditingController _customMarka;
   late final TextEditingController _customModel;
+  late final TextEditingController _km;
 
   String? _selectedBrand;
   String? _selectedModel;
   int? _selectedYear;
+  String? _selectedTransmission;
+  String? _selectedFuel;
 
   bool _saving = false;
 
@@ -66,9 +85,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
     _plaka = TextEditingController(text: c?.plaka ?? '');
     _customMarka = TextEditingController();
     _customModel = TextEditingController();
+    _km = TextEditingController(
+      text: c != null && c.km > 0 ? c.km.toString() : '',
+    );
     _existingImagePath = c?.imagePath;
     _selectedCardColor =
         c?.cardColor != null ? Color(c!.cardColor!) : null;
+    _selectedTransmission = c?.transmission;
+    _selectedFuel = c?.fuelType;
 
     if (c != null) {
       final List<String> brands = CarCatalog.brandNames;
@@ -96,7 +120,83 @@ class _AddCarScreenState extends State<AddCarScreen> {
     _plaka.dispose();
     _customMarka.dispose();
     _customModel.dispose();
+    _km.dispose();
     super.dispose();
+  }
+
+  List<String> _transmissionItems() {
+    final List<String> list = List<String>.from(_kTransmissionOptions);
+    final String? t = _selectedTransmission;
+    if (t != null && t.isNotEmpty && !list.contains(t)) {
+      list.insert(0, t);
+    }
+    return list;
+  }
+
+  List<String> _fuelItems() {
+    final List<String> list = List<String>.from(_kFuelOptions);
+    final String? f = _selectedFuel;
+    if (f != null && f.isNotEmpty && !list.contains(f)) {
+      list.insert(0, f);
+    }
+    return list;
+  }
+
+  int _parseKmInput() {
+    final String raw = _km.text.trim();
+    if (raw.isEmpty) return 0;
+    final String digits =
+        raw.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.isEmpty) return 0;
+    return int.tryParse(digits) ?? 0;
+  }
+
+  Future<void> _confirmDelete() async {
+    final Car? c = widget.existing;
+    if (c?.id == null) return;
+    final bool? ok = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('Aracı sil'),
+          content: Text(
+            '${c!.marka} ${c.model} kaydı ve ilişkili bakım / hatırlatıcılar silinecek.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('İptal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              child: const Text('Sil'),
+            ),
+          ],
+        );
+      },
+    );
+    if (ok != true || !mounted) return;
+
+    setState(() => _saving = true);
+    try {
+      await ImageStorageService.instance.deleteIfExists(_existingImagePath);
+      await _repo.deleteCar(c!.id!);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Araç silindi')),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Silinemedi: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   String get _resolvedBrand {
@@ -191,6 +291,18 @@ class _AddCarScreenState extends State<AddCarScreen> {
       );
       return;
     }
+    if (_selectedTransmission == null || _selectedTransmission!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Şanzıman tipi seçilmedi')),
+      );
+      return;
+    }
+    if (_selectedFuel == null || _selectedFuel!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Yakıt tipi seçilmedi')),
+      );
+      return;
+    }
 
     setState(() => _saving = true);
     try {
@@ -244,6 +356,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
         yil: _selectedYear!,
         imagePath: finalImagePath,
         cardColor: _selectedCardColor?.toARGB32(),
+        km: _parseKmInput(),
+        transmission: _selectedTransmission,
+        fuelType: _selectedFuel,
       );
 
       if (_isEdit) {
@@ -445,7 +560,18 @@ class _AddCarScreenState extends State<AddCarScreen> {
         brandIsOther || _selectedModel == CarCatalog.otherModel;
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Aracı düzenle' : 'Yeni araç')),
+      appBar: AppBar(
+        title: Text(_isEdit ? 'Aracı düzenle' : 'Yeni araç'),
+        actions: _isEdit
+            ? <Widget>[
+                IconButton(
+                  tooltip: 'Aracı sil',
+                  onPressed: _saving ? null : _confirmDelete,
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ]
+            : null,
+      ),
       body: Stack(
         children: <Widget>[
           SafeArea(
@@ -579,6 +705,69 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     .toList(),
                 onChanged: (int? v) => setState(() => _selectedYear = v),
                 validator: (int? v) => v == null ? 'Yıl seç' : null,
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _km,
+                keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d\s.,]')),
+                  LengthLimitingTextInputFormatter(12),
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'Kilometre',
+                  hintText: 'Örn. 145000 veya 145.000',
+                  prefixIcon: Icon(Icons.speed_outlined),
+                ),
+                validator: (String? v) {
+                  final String t = (v ?? '').trim();
+                  if (t.isEmpty) return null;
+                  final String digits = t.replaceAll(RegExp(r'[^\d]'), '');
+                  if (digits.isEmpty) return 'Geçerli km girin';
+                  if (int.tryParse(digits) == null) return 'Geçerli km girin';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 14),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedTransmission,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Şanzıman tipi',
+                  prefixIcon: Icon(Icons.settings_suggest_outlined),
+                ),
+                items: _transmissionItems()
+                    .map(
+                      (String t) => DropdownMenuItem<String>(
+                        value: t,
+                        child: Text(t),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (String? v) =>
+                    setState(() => _selectedTransmission = v),
+                validator: (String? v) =>
+                    v == null || v.isEmpty ? 'Şanzıman seç' : null,
+              ),
+              const SizedBox(height: 14),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedFuel,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Yakıt tipi',
+                  prefixIcon: Icon(Icons.local_gas_station_outlined),
+                ),
+                items: _fuelItems()
+                    .map(
+                      (String t) => DropdownMenuItem<String>(
+                        value: t,
+                        child: Text(t),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (String? v) => setState(() => _selectedFuel = v),
+                validator: (String? v) =>
+                    v == null || v.isEmpty ? 'Yakıt seç' : null,
               ),
               const SizedBox(height: 28),
               FilledButton.icon(

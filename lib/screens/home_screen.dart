@@ -14,6 +14,7 @@ import '../services/date_helper.dart';
 import '../theme/app_theme.dart';
 import '../theme/car_card_palette.dart';
 import '../theme/theme_controller.dart';
+import '../widgets/brand_logo_circle.dart';
 import 'add_car_screen.dart';
 import 'maintenance_screen.dart';
 import 'reminder_screen.dart';
@@ -349,12 +350,22 @@ class _CarHeaderCard extends StatelessWidget {
   final VoidCallback onEdit;
 
   String get _totalKmText {
-    if (logs.isEmpty) return '0';
-    final int latest = logs
-        .map((Maintenance e) => e.km)
-        .reduce((int a, int b) => a > b ? a : b);
-    return NumberFormat.decimalPattern('tr_TR').format(latest);
+    final int fromCar = car.km;
+    final int fromLogs = logs.isEmpty
+        ? 0
+        : logs
+            .map((Maintenance e) => e.km)
+            .reduce((int a, int b) => a > b ? a : b);
+    final int v = math.max(fromCar, fromLogs);
+    return NumberFormat.decimalPattern('tr_TR').format(v);
   }
+
+  String get _transmissionLabel => car.transmission?.trim().isNotEmpty == true
+      ? car.transmission!.trim()
+      : '—';
+
+  String get _fuelLabel =>
+      car.fuelType?.trim().isNotEmpty == true ? car.fuelType!.trim() : '—';
 
   @override
   Widget build(BuildContext context) {
@@ -362,16 +373,19 @@ class _CarHeaderCard extends StatelessWidget {
       argbValue: car.cardColor,
       seed: car.id,
     );
-    final Color bottomColor = Color.lerp(accent, Colors.white, 0.40)!;;
-    final Color topTaperColor =accent;
+    final Color bottomColor = Color.lerp(accent, Colors.white, 0.40)!;
+    final Color topTaperColor = accent;
     final Color titleOnTopColor = accent;
+    final Color lineFg = topTaperColor.computeLuminance() < 0.45
+        ? Colors.white
+        : titleOnTopColor;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 40),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final double w = constraints.maxWidth;
-          final double s = (w / _kHeroCardDesignWidth).clamp(0.82, 1.0);
+          final double s = (w / _kHeroCardDesignWidth).clamp(0.22, 1.0);
           final double hTop = _kHeroTopCardHeightPx * s;
           final double hBottom = _kHeroBottomCardHeightPx * s;
           final double br = math
@@ -424,85 +438,110 @@ class _CarHeaderCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Plate + model on bottom (dark) card, left side.
+                // Üstteki açık taper alanından kaçınmak için aşağı; başlık full width, edit en sağda.
                 Positioned(
-                  top: 52 * s,
-                  left: 24,
-                  right: 24,
-                  height: hBottom - 56 * s,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: w * 0.42),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                  top: 44 * s,
+                  left: 14 * s,
+                  right: 8 * s,
+                  bottom: -10 * s,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          Text(
-                            car.plaka,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.4,
+                          BrandLogoCircle(
+                            marka: car.marka,
+                            size: 40 * s,
+                            accent: accent,
+                          ),
+                          SizedBox(width: 10 * s),
+                          Expanded(
+                            child: Row(
+                              children: <Widget>[
+                                Flexible(
+                                  flex: 2,
+                                  child: Text(
+                                    car.marka,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: lineFg,
+                                      fontSize: 18 * s,
+                                      fontWeight: FontWeight.w800,
+                                      height: 1.15,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8 * s),
+                                Flexible(
+                                  flex: 3,
+                                  child: Text(
+                                    car.model,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: lineFg,
+                                      fontSize: 18 * s,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.15,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: 6 * s),
-                          Text(
-                            '${car.yil} Model',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                          SizedBox(width: 8 * s),
+                          Material(
+                            color: lineFg.withValues(alpha: 0.16),
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: onEdit,
+                              child: SizedBox(
+                                width: 36 * s,
+                                height: 36 * s,
+                                child: Icon(
+                                  Icons.edit_outlined,
+                                  color: lineFg,
+                                  size: 18 * s,
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ),
-                // Title + KM (üst sol).
-                Positioned(
-                  top: 18 * s,
-                  left: 22 * s,
-                  right: 56 * s,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          '${car.marka} ${car.model}',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: titleOnTopColor,
-                            fontSize: 21 * s,
-                            fontWeight: FontWeight.w800,
-                            height: 1.12,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8 * s),
+                      SizedBox(height: 14 * s),
                       Padding(
-                        padding: EdgeInsets.only(top: 3 * s),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        padding: EdgeInsets.only(right: w * 0.36),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Icon(
-                              Icons.map_outlined,
-                              color: titleOnTopColor.withValues(alpha: 0.88),
-                              size: 16 * s,
+                            _HeroSpecRow(
+                              icon: Icons.map_outlined,
+                              label: '$_totalKmText km',
+                              gap: 10 * s,
+                              iconSize: 18 * s,
+                              fontSize: 13 * s,
+                              color: lineFg,
                             ),
-                            SizedBox(width: 5 * s),
-                            Text(
-                              '$_totalKmText KM',
-                              style: TextStyle(
-                                color: titleOnTopColor.withValues(alpha: 0.9),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12 * s,
-                              ),
+                            SizedBox(height: 10 * s),
+                            _HeroSpecRow(
+                              icon: Icons.settings_suggest_outlined,
+                              label: _transmissionLabel,
+                              gap: 10 * s,
+                              iconSize: 18 * s,
+                              fontSize: 13 * s,
+                              color: lineFg,
+                            ),
+                            SizedBox(height: 10 * s),
+                            _HeroSpecRow(
+                              icon: Icons.local_gas_station_outlined,
+                              label: _fuelLabel,
+                              gap: 10 * s,
+                              iconSize: 18 * s,
+                              fontSize: 13 * s,
+                              color: lineFg,
                             ),
                           ],
                         ),
@@ -511,31 +550,10 @@ class _CarHeaderCard extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: 10 * s,
-                  right: 14 * s,
-                  child: Material(
-                    color: accent.withValues(alpha: 0.14),
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: onEdit,
-                      child: SizedBox(
-                        width: 36 * s,
-                        height: 36 * s,
-                        child: Icon(
-                          Icons.edit_outlined,
-                          color: titleOnTopColor,
-                          size: 18 * s,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: hTop * 0.38,
-                  left: 120 * s,
-                  right: -20 * s,
-                  bottom: -28 * s,
+                  top: hTop * 0.02,
+                  left: w * 0.34,
+                  right: 10 * s,
+                  bottom: 6 * s,
                   child: IgnorePointer(
                     child: _CarImage(imagePath: car.imagePath),
                   ),
@@ -545,6 +563,57 @@ class _CarHeaderCard extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _HeroSpecRow extends StatelessWidget {
+  const _HeroSpecRow({
+    required this.icon,
+    required this.label,
+    required this.gap,
+    required this.iconSize,
+    required this.fontSize,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final double gap;
+  final double iconSize;
+  final double fontSize;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        SizedBox(
+          width: iconSize + 4,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Icon(
+              icon,
+              size: iconSize,
+              color: color.withValues(alpha: 0.92),
+            ),
+          ),
+        ),
+        SizedBox(width: gap),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.95),
+              fontSize: fontSize,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1119,7 +1188,12 @@ class _AllRemindersTab extends StatelessWidget {
                         final Car car = data.cars.firstWhere(
                           (Car x) => x.id == r.carId,
                           orElse: () => const Car(
-                              plaka: '—', marka: '?', model: '', yil: 0),
+                            plaka: '—',
+                            marka: '?',
+                            model: '',
+                            yil: 0,
+                            km: 0,
+                          ),
                         );
                         return _ReminderFlatTile(reminder: r, car: car);
                       },
