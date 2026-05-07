@@ -29,7 +29,7 @@ class CarDataApp extends StatelessWidget {
       valueListenable: ThemeController.instance,
       builder: (BuildContext context, ThemeMode mode, _) {
         return MaterialApp(
-          title: 'Garage',
+          title: 'Garaj',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,

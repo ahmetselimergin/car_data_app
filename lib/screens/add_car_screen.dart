@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../data/car_catalog.dart';
@@ -11,6 +14,15 @@ import '../services/background_removal_service.dart';
 import '../services/image_storage_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/car_card_palette.dart';
+import '../utils/turkish_plate.dart';
+
+int _colorToArgb32(Color c) {
+  final int a = (c.a * 255).round().clamp(0, 255);
+  final int r = (c.r * 255).round().clamp(0, 255);
+  final int g = (c.g * 255).round().clamp(0, 255);
+  final int b = (c.b * 255).round().clamp(0, 255);
+  return (a << 24) | (r << 16) | (g << 8) | b;
+}
 
 const List<String> _kTransmissionOptions = <String>[
   'Manuel',
@@ -62,6 +74,12 @@ class _AddCarScreenState extends State<AddCarScreen> {
   /// Kalıcı dizine ancak "Kaydet"e basınca kopyalanır.
   XFile? _pickedImage;
 
+  /// Seçilen fotoğraf için arka plan silinmiş önizleme (kaydetmeden önce dairede).
+  Uint8List? _previewProcessedBytes;
+
+  /// Önizleme için model çalışıyor.
+  bool _previewLoading = false;
+
   /// Kullanıcı bu oturumda fotoğrafı kaldırmak istedi mi?
   bool _imageCleared = false;
 
@@ -73,7 +91,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   /// gösterilen mesaj. UI'daki progress overlay buna bakıyor.
   String? _processingMessage;
 
-  /// Hero kartının arka plan rengi. Null = palet/id'ye göre otomatik seçilsin.
+  /// Kahraman kart rengi; null = araç id’sine göre otomatik palet.
   Color? _selectedCardColor;
 
   bool get _isEdit => widget.existing != null;
@@ -214,19 +232,88 @@ class _AddCarScreenState extends State<AddCarScreen> {
     return _selectedModel?.trim() ?? '';
   }
 
+  /// `image_cropper` yalnızca Android / iOS native’de kayıtlıdır (web ve masaüstü yok).
+  static bool get _supportsNativeCrop =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  /// Web veya masaüstünde kırpma yok; mobilde plugin yoksa [MissingPluginException] —
+  /// uygulamayı tamamen durdurup `flutter run` ile yeniden derleyin (hot reload yetmez).
+  Future<XFile?> _cropPickedFile(XFile picked) async {
+    if (!_supportsNativeCrop) return picked;
+    try {
+      final CroppedFile? cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 92,
+        uiSettings: <PlatformUiSettings>[
+          AndroidUiSettings(
+            toolbarTitle: 'Fotoğrafı kırp',
+            toolbarColor: AppTheme.primary,
+            toolbarWidgetColor: Colors.white,
+            statusBarLight: false,
+            navBarLight: false,
+            lockAspectRatio: false,
+            aspectRatioPresets: const <CropAspectRatioPresetData>[
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9,
+            ],
+          ),
+          IOSUiSettings(
+            title: 'Kırp',
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+            aspectRatioPickerButtonHidden: false,
+          ),
+        ],
+      );
+      if (cropped == null) return null;
+      return XFile(cropped.path);
+    } on MissingPluginException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Kırpma henüz yüklü değil. Uygulamayı tamamen kapatıp yeniden başlatın '
+              '(Stop ■ sonra flutter run). Şimdilik fotoğraf kırpılmadan kullanılıyor.',
+            ),
+          ),
+        );
+      }
+      return picked;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kırpma atlandı: $e')),
+        );
+      }
+      return picked;
+    }
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? file = await ImagePicker().pickImage(
         source: source,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 85,
+        maxWidth: 2400,
+        maxHeight: 2400,
+        imageQuality: 92,
       );
-      if (file == null) return;
+      if (file == null || !mounted) return;
+      final XFile? cropped = await _cropPickedFile(file);
+      if (!mounted || cropped == null) return;
       setState(() {
-        _pickedImage = file;
+        _pickedImage = cropped;
         _imageCleared = false;
+        _previewProcessedBytes = null;
+        _previewLoading = false;
       });
+      await _runBackgroundPreviewIfNeeded();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,6 +349,23 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   _pickImage(ImageSource.gallery);
                 },
               ),
+              if (_pickedImage != null && _supportsNativeCrop)
+                ListTile(
+                  leading: const Icon(Icons.crop_outlined),
+                  title: const Text('Yeniden kırp'),
+                  onTap: () async {
+                    Navigator.of(c).pop();
+                    final XFile? cropped =
+                        await _cropPickedFile(_pickedImage!);
+                    if (!mounted || cropped == null) return;
+                    setState(() {
+                      _pickedImage = cropped;
+                      _previewProcessedBytes = null;
+                      _previewLoading = false;
+                    });
+                    await _runBackgroundPreviewIfNeeded();
+                  },
+                ),
               if (hasImage)
                 ListTile(
                   leading: const Icon(Icons.delete_outline,
@@ -273,6 +377,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     setState(() {
                       _pickedImage = null;
                       _imageCleared = true;
+                      _previewProcessedBytes = null;
+                      _previewLoading = false;
                     });
                   },
                 ),
@@ -350,12 +456,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
       final Car car = Car(
         id: widget.existing?.id,
-        plaka: _plaka.text.trim().toUpperCase(),
+        plaka: TurkishPlateValidator.normalize(_plaka.text),
         marka: _resolvedBrand,
         model: _resolvedModel,
         yil: _selectedYear!,
         imagePath: finalImagePath,
-        cardColor: _selectedCardColor?.toARGB32(),
+        cardColor: _selectedCardColor != null
+            ? _colorToArgb32(_selectedCardColor!)
+            : null,
         km: _parseKmInput(),
         transmission: _selectedTransmission,
         fuelType: _selectedFuel,
@@ -440,7 +548,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 }
                 final Color color = CarCardPalette.colors[i - 1];
                 final bool selected = _selectedCardColor != null &&
-                    _selectedCardColor!.toARGB32() == color.toARGB32();
+                    _colorToArgb32(_selectedCardColor!) ==
+                        _colorToArgb32(color);
                 return _ColorDot(
                   color: color,
                   selected: selected,
@@ -477,66 +586,149 @@ class _AddCarScreenState extends State<AddCarScreen> {
           ),
           Switch.adaptive(
             value: _removeBackground,
-            onChanged: (bool v) => setState(() => _removeBackground = v),
+            onChanged: (bool v) async {
+              setState(() => _removeBackground = v);
+              await _runBackgroundPreviewIfNeeded();
+            },
           ),
         ],
       ),
     );
   }
 
+  ImageProvider? _effectiveImageProvider() {
+    if (_pickedImage != null) {
+      if (_removeBackground) {
+        if (_previewLoading) {
+          return null;
+        }
+        if (_previewProcessedBytes != null) {
+          return MemoryImage(_previewProcessedBytes!);
+        }
+        return FileImage(File(_pickedImage!.path));
+      }
+      return FileImage(File(_pickedImage!.path));
+    }
+    if (!_imageCleared &&
+        (_existingImagePath?.isNotEmpty ?? false) &&
+        File(_existingImagePath!).existsSync()) {
+      return FileImage(File(_existingImagePath!));
+    }
+    return null;
+  }
+
+  Future<void> _runBackgroundPreviewIfNeeded() async {
+    final XFile? pick = _pickedImage;
+    if (pick == null || !mounted) {
+      return;
+    }
+    if (!_removeBackground) {
+      if (mounted) {
+        setState(() {
+          _previewProcessedBytes = null;
+          _previewLoading = false;
+        });
+      }
+      return;
+    }
+
+    setState(() {
+      _previewLoading = true;
+      _previewProcessedBytes = null;
+    });
+
+    try {
+      final Uint8List rawBytes = await File(pick.path).readAsBytes();
+      final Uint8List? cutout =
+          await BackgroundRemovalService.instance.removeBackground(rawBytes);
+      if (!mounted || _pickedImage?.path != pick.path) {
+        return;
+      }
+      setState(() {
+        _previewLoading = false;
+        _previewProcessedBytes = cutout;
+      });
+      if (cutout == null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Arka plan önizlemesi oluşturulamadı; orijinal fotoğraf gösteriliyor.',
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _previewLoading = false);
+      }
+    }
+  }
+
   Widget _buildImagePicker() {
-    final ImageProvider? provider = _pickedImage != null
-        ? FileImage(File(_pickedImage!.path))
-        : (!_imageCleared && (_existingImagePath?.isNotEmpty ?? false))
-            ? FileImage(File(_existingImagePath!))
-            : null;
+    final ImageProvider? provider = _effectiveImageProvider();
+    final DecorationImage? plateDeco = provider != null && !_previewLoading
+        ? DecorationImage(
+            image: provider,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+          )
+        : null;
+    final bool hasPhoto = plateDeco != null;
+
+    final double frameW = (MediaQuery.sizeOf(context).width - 40)
+        .clamp(260.0, 400.0);
+    final double frameH = frameW * 0.56;
 
     return GestureDetector(
       onTap: _showImagePickerSheet,
       child: Container(
-        width: 140,
-        height: 140,
+        width: frameW,
+        height: frameH,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(24),
           color: AppTheme.primary.withValues(alpha: 0.10),
           border: Border.all(
             color: AppTheme.primary.withValues(alpha: 0.4),
             width: 1.5,
           ),
-          image: provider == null
-              ? null
-              : DecorationImage(image: provider, fit: BoxFit.cover),
+          image: plateDeco,
         ),
-        child: provider != null
-            ? Align(
-                alignment: Alignment.bottomRight,
-                child: Container(
-                  margin: const EdgeInsets.all(6),
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.edit,
-                      color: Colors.white, size: 16),
-                ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            if (_previewLoading)
+              const SizedBox(
+                width: 36,
+                height: 36,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
               )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const <Widget>[
-                  Icon(Icons.add_a_photo_outlined,
-                      color: AppTheme.primary, size: 32),
-                  SizedBox(height: 6),
-                  Text(
-                    'Fotoğraf ekle',
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+            else if (!hasPhoto)
+              Icon(
+                Icons.directions_car_rounded,
+                size: 64,
+                color: AppTheme.primary.withValues(alpha: 0.42),
               ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: AppTheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  hasPhoto
+                      ? Icons.edit_outlined
+                      : Icons.add_photo_alternate_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -590,21 +782,16 @@ class _AddCarScreenState extends State<AddCarScreen> {
               const SizedBox(height: 14),
               TextFormField(
                 controller: _plaka,
-                textCapitalization: TextCapitalization.characters,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 inputFormatters: <TextInputFormatter>[
-                  LengthLimitingTextInputFormatter(10),
+                  TurkishPlateInputFormatter(maxLength: 12),
                 ],
                 decoration: const InputDecoration(
                   labelText: 'Plaka',
-                  hintText: '34 ABC 123',
+                  hintText: '34 ABC 1234',
                   prefixIcon: Icon(Icons.confirmation_number_outlined),
                 ),
-                validator: (String? v) {
-                  final String value = (v ?? '').trim();
-                  if (value.isEmpty) return 'Plaka gerekli';
-                  if (value.length < 5) return 'Geçerli bir plaka gir';
-                  return null;
-                },
+                validator: TurkishPlateValidator.formError,
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(

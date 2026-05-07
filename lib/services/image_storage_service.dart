@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+
+import '../utils/car_image_normalize.dart';
 
 /// Araç fotoğraflarını uygulama kalıcı dizinine (`<docs>/car_images/`)
 /// kopyalayan ve silen küçük yardımcı.
@@ -29,13 +32,20 @@ class ImageStorageService {
   /// Aynı isimli eski dosya varsa üzerine yazılır.
   Future<String> saveCarImage(String sourcePath) async {
     final Directory dir = await _ensureDir();
-    final String ext = p.extension(sourcePath).isEmpty
+    final String extRaw = p.extension(sourcePath).isEmpty
         ? '.jpg'
         : p.extension(sourcePath);
     final String fileName =
-        'car_${DateTime.now().millisecondsSinceEpoch}$ext';
+        'car_${DateTime.now().millisecondsSinceEpoch}$extRaw';
     final String destPath = p.join(dir.path, fileName);
-    await File(sourcePath).copy(destPath);
+    if (extRaw.toLowerCase() == '.png') {
+      final Uint8List raw = await File(sourcePath).readAsBytes();
+      final Uint8List out =
+          await Isolate.run(() => normalizeCarImageBytes(raw));
+      await File(destPath).writeAsBytes(out, flush: true);
+    } else {
+      await File(sourcePath).copy(destPath);
+    }
     return destPath;
   }
 
@@ -49,7 +59,11 @@ class ImageStorageService {
     final String fileName =
         'car_${DateTime.now().millisecondsSinceEpoch}$extension';
     final String destPath = p.join(dir.path, fileName);
-    await File(destPath).writeAsBytes(bytes, flush: true);
+    Uint8List out = bytes;
+    if (extension.toLowerCase() == '.png') {
+      out = await Isolate.run(() => normalizeCarImageBytes(bytes));
+    }
+    await File(destPath).writeAsBytes(out, flush: true);
     return destPath;
   }
 

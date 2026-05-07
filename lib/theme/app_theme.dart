@@ -27,7 +27,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
   /// Yardımcı/alt açıklama yazıları.
   final Color mutedText;
 
-  /// Birincil (mavi) yüzey üzerindeki metin/ikon rengi.
+  /// Birincil vurgu yüzeyi üzerindeki metin/ikon rengi.
   final Color heroOnPrimary;
 
   final Color success;
@@ -81,27 +81,26 @@ extension AppTokensX on BuildContext {
 class AppTheme {
   AppTheme._();
 
-  // Shared brand colors
-  static const Color primary = Color(0xFF29B6F6);
-  static const Color primaryDark = Color(0xFF0288D1);
+  /// Ana marka rengi (butonlar, vurgular, garaj kutuları).
+  static const Color primary = Color(0xFF1EA971);
+  static const Color primaryDark = Color(0xFF168A5C);
 
-  // Light palette
-  static const Color _navy = Color(0xFF0D253F);
-  static const Color _bgLight = Color(0xFFF5F9FF);
-  static const Color _borderLight = Color(0xFFE7EFF7);
+  static const Color _ink = Color(0xFF18181B);
+  static const Color _bgLight = Color(0xFFF2F2F2);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _borderLight = Color(0xFFE4E4E7);
 
-  // Dark palette
-  static const Color _bgDark = Color(0xFF0A1520);
-  static const Color _surfaceDark = Color(0xFF132434);
-  static const Color _cardDark = Color(0xFF1A2E43);
-  static const Color _borderDark = Color(0xFF24384F);
+  static const Color _bgDark = Color(0xFF1E1E1E);
+  static const Color _surfaceDark = Color(0xFF262626);
+  static const Color _cardDark = Color(0xFF2A2A2A);
+  static const Color _borderDark = Color(0xFF3D3D3D);
 
   static const AppTokens _lightTokens = AppTokens(
-    cardBg: Colors.white,
-    surfaceMuted: Colors.white,
+    cardBg: _cardLight,
+    surfaceMuted: _cardLight,
     border: _borderLight,
-    mutedText: Color(0x990D253F),
-    heroOnPrimary: _navy,
+    mutedText: Color(0x9918181B),
+    heroOnPrimary: Colors.white,
     success: Color(0xFF26C281),
     warning: Color(0xFFF9A825),
     danger: Color(0xFFE53935),
@@ -111,7 +110,7 @@ class AppTheme {
     cardBg: _cardDark,
     surfaceMuted: _surfaceDark,
     border: _borderDark,
-    mutedText: Color(0xB3E3EEF9),
+    mutedText: Color(0xB3A1A1AA),
     heroOnPrimary: Colors.white,
     success: Color(0xFF26C281),
     warning: Color(0xFFF9A825),
@@ -123,7 +122,9 @@ class AppTheme {
       seedColor: primary,
       brightness: Brightness.light,
       primary: primary,
-      surface: Colors.white,
+      onPrimary: Colors.white,
+      surface: _cardLight,
+      onSurface: _ink,
     );
     return ThemeData(
       useMaterial3: true,
@@ -131,13 +132,13 @@ class AppTheme {
       scaffoldBackgroundColor: _bgLight,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
-        foregroundColor: _navy,
+        foregroundColor: _ink,
         elevation: 0,
         centerTitle: false,
       ),
-      textTheme: _textTheme(_navy),
+      textTheme: _textTheme(_ink),
       cardTheme: CardThemeData(
-        color: Colors.white,
+        color: _cardLight,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
@@ -147,11 +148,11 @@ class AppTheme {
       inputDecorationTheme: _inputTheme(scheme),
       filledButtonTheme: _filledButtonTheme(),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white,
-        indicatorColor: primary.withValues(alpha: 0.12),
+        backgroundColor: _cardLight,
+        indicatorColor: primary.withValues(alpha: 0.18),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w600, color: _navy),
+              fontSize: 12, fontWeight: FontWeight.w600, color: _ink),
         ),
       ),
       extensions: const <ThemeExtension<dynamic>>[_lightTokens],
@@ -163,7 +164,9 @@ class AppTheme {
       seedColor: primary,
       brightness: Brightness.dark,
       primary: primary,
-      surface: _surfaceDark,
+      onPrimary: Colors.white,
+      surface: _cardDark,
+      onSurface: Colors.white,
     );
     return ThemeData(
       useMaterial3: true,
@@ -188,7 +191,7 @@ class AppTheme {
       filledButtonTheme: _filledButtonTheme(),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: _surfaceDark,
-        indicatorColor: primary.withValues(alpha: 0.25),
+        indicatorColor: primary.withValues(alpha: 0.28),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(
               fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
@@ -234,7 +237,7 @@ class AppTheme {
       {bool isDark = false}) {
     return InputDecorationTheme(
       filled: true,
-      fillColor: isDark ? _cardDark : Colors.white,
+      fillColor: isDark ? _cardDark : _cardLight,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: isDark ? _borderDark : _borderLight),

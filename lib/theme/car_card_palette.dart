@@ -1,33 +1,30 @@
 import 'package:flutter/material.dart';
 
-/// Araç hero kartının arka planı için sunulan ön tanımlı renk paleti.
-/// Modern, yumuşak ama doygun tonlar; karanlık/aydınlık temada da okunaklı.
+/// Kahraman kartı için araç başına saklanabilir renk paleti.
 class CarCardPalette {
   CarCardPalette._();
 
-  /// Sıralama: en sık tercih edilenler önce.
+  /// Manuel seçim listesi (ilk renk tema birincili ile uyumlu).
   static const List<Color> colors = <Color>[
-    Color(0xFF6E70F2), // indigo (referans tasarım)
-    Color(0xFF1F7AE0), // klasik mavi
-    Color(0xFF0EA5A5), // teal
-    Color(0xFF22A06B), // koyu yeşil
-    Color(0xFFE0763D), // turuncu
-    Color(0xFFE05D5D), // mercan kırmızı
-    Color(0xFFB54AC8), // mor
-    Color(0xFF334155), // antrasit
+    Color(0xFF1EA971),
+    Color(0xFFE53935),
+    Color(0xFF1E88E5),
+    Color(0xFFF9A825),
+    Color(0xFF8E24AA),
+    Color(0xFF3949AB),
+    Color(0xFF00897B),
+    Color(0xFFD84315),
+    Color(0xFF5E35B1),
+    Color(0xFF43A047),
   ];
 
-  /// Verilen [seed] değerine (örn. car.id) göre paletten deterministik bir renk seçer.
-  /// Yeni eklenen araçlara çeşitli renkler dağılması için kullanılır.
-  static Color autoFor(int? seed) {
-    if (seed == null) return colors.first;
-    return colors[seed.abs() % colors.length];
-  }
-
-  /// [argbValue] DB'den okunan ARGB int değeri ise onu Color'a çevirir,
-  /// null ise [seed]'e göre otomatik seçer.
-  static Color resolve({required int? argbValue, required int? seed}) {
+  static Color resolve({int? argbValue, int? seed}) {
     if (argbValue != null) return Color(argbValue);
     return autoFor(seed);
+  }
+
+  static Color autoFor(int? seed) {
+    final int i = (seed ?? 0).abs() % colors.length;
+    return colors[i];
   }
 }
