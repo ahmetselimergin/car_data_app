@@ -146,10 +146,19 @@ class AppTheme {
         ),
       ),
       inputDecorationTheme: _inputTheme(scheme),
-      filledButtonTheme: _filledButtonTheme(),
+      filledButtonTheme: _filledButtonTheme(scheme, Brightness.light),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.onSurface,
+        foregroundColor: scheme.surface,
+        elevation: 2,
+        extendedTextStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: _cardLight,
-        indicatorColor: primary.withValues(alpha: 0.18),
+        indicatorColor: _ink.withValues(alpha: 0.08),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(
               fontSize: 12, fontWeight: FontWeight.w600, color: _ink),
@@ -188,10 +197,19 @@ class AppTheme {
         ),
       ),
       inputDecorationTheme: _inputTheme(scheme, isDark: true),
-      filledButtonTheme: _filledButtonTheme(),
+      filledButtonTheme: _filledButtonTheme(scheme, Brightness.dark),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.inverseSurface,
+        foregroundColor: scheme.onInverseSurface,
+        elevation: 2,
+        extendedTextStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: _surfaceDark,
-        indicatorColor: primary.withValues(alpha: 0.28),
+        indicatorColor: Colors.white.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(
               fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
@@ -202,11 +220,20 @@ class AppTheme {
     );
   }
 
-  static FilledButtonThemeData _filledButtonTheme() {
+  /// Alt navigasyonla uyumlu: yeşil yerine yüzey / onSurface ailesi (tarafsız dolu buton).
+  static FilledButtonThemeData _filledButtonTheme(
+    ColorScheme scheme,
+    Brightness brightness,
+  ) {
+    final bool dark = brightness == Brightness.dark;
+    final Color bg = dark ? scheme.inverseSurface : scheme.onSurface;
+    final Color fg = dark ? scheme.onInverseSurface : scheme.surface;
     return FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
+        backgroundColor: bg,
+        foregroundColor: fg,
+        disabledBackgroundColor: bg.withValues(alpha: 0.38),
+        disabledForegroundColor: fg.withValues(alpha: 0.38),
         minimumSize: const Size.fromHeight(54),
         textStyle:
             const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),

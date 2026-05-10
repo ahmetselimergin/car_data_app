@@ -14,7 +14,13 @@ class _BottomNav extends StatelessWidget {
     ];
 
     final AppTokens tokens = context.tokens;
-    final bool dark = Theme.of(context).brightness == Brightness.dark;
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final bool dark = theme.brightness == Brightness.dark;
+    final Color onNav = scheme.onSurface;
+    final Color selectedPill = dark
+        ? Colors.white.withValues(alpha: 0.12)
+        : onNav.withValues(alpha: 0.08);
     return SafeArea(
       top: false,
       child: Container(
@@ -52,9 +58,7 @@ class _BottomNav extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: selected
-                        ? AppTheme.primary.withValues(alpha: 0.14)
-                        : Colors.transparent,
+                    color: selected ? selectedPill : Colors.transparent,
                     borderRadius: BorderRadius.circular(28),
                   ),
                   child: Row(
@@ -62,8 +66,7 @@ class _BottomNav extends StatelessWidget {
                     children: <Widget>[
                       Icon(
                         item.icon,
-                        color:
-                            selected ? AppTheme.primary : tokens.mutedText,
+                        color: selected ? onNav : tokens.mutedText,
                         size: 20,
                       ),
                       if (selected) ...<Widget>[
@@ -75,8 +78,8 @@ class _BottomNav extends StatelessWidget {
                             child: Text(
                               item.label,
                               maxLines: 1,
-                              style: const TextStyle(
-                                color: AppTheme.primary,
+                              style: TextStyle(
+                                color: onNav,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
                               ),

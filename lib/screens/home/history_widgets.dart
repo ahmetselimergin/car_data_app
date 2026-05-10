@@ -1,5 +1,14 @@
 part of 'package:car_data_app/screens/home_screen.dart';
 
+String _historyMaintenanceFlagsShort(Maintenance log) {
+  final List<String> parts = <String>[];
+  if (log.resmiServis) parts.add('Resmi');
+  if (log.garantiKapsaminda) parts.add('Garanti');
+  if (log.faturaAlindi) parts.add('Fiş');
+  if (log.sigortaKarsiladi) parts.add('Sigorta');
+  return parts.join(' · ');
+}
+
 class _HistoryTile extends StatelessWidget {
   const _HistoryTile({required this.log, required this.accent});
   final Maintenance log;
@@ -16,7 +25,6 @@ class _HistoryTile extends StatelessWidget {
                 ? '${(days / 7).floor()} hafta önce'
                 : '${(days / 30).floor()} ay önce';
 
-    final AppTokens tokens = context.tokens;
     final Color vivid = GarageCardTheming.vividForeground(accent, context);
     return Container(
       decoration: GarageCardTheming.garageCardDecoration(
@@ -60,6 +68,20 @@ class _HistoryTile extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                 ),
+                if (log.hasDetailFlags) ...<Widget>[
+                  const SizedBox(height: 4),
+                  Text(
+                    _historyMaintenanceFlagsShort(log),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: GarageCardTheming.supportiveLabel(
+                              context, accent),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Container(
                   height: 3,
@@ -74,14 +96,20 @@ class _HistoryTile extends StatelessWidget {
           const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(Icons.check_circle, color: tokens.success, size: 18),
-              const SizedBox(height: 2),
-              Text('Güncel',
-                  style: TextStyle(
-                      color: tokens.success.withValues(alpha: 0.9),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                NumberFormat.currency(
+                  locale: 'tr_TR',
+                  symbol: '₺',
+                  decimalDigits: 2,
+                ).format(log.maliyet),
+                style: TextStyle(
+                  color: vivid,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
             ],
           ),
         ],

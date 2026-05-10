@@ -12,6 +12,59 @@ class _SettingsTab extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 18),
 
+        ValueListenableBuilder<Session?>(
+          valueListenable: SessionController.instance,
+          builder: (BuildContext context, Session? session, Widget? _) {
+            if (session == null) return const SizedBox.shrink();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _settingsCard(context, <Widget>[
+                  ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.person_outline_rounded),
+                    ),
+                    title: Text(session.greetingName),
+                    subtitle: Text(session.email),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.logout_rounded,
+                        color: AppTheme.primary),
+                    title: const Text('Çıkış yap'),
+                    subtitle: const Text(
+                        'Bu cihazdaki oturumu kapatır; araç verileri silinmez.'),
+                    onTap: () async {
+                      final bool? ok = await showDialog<bool>(
+                        context: context,
+                        builder: (BuildContext ctx) => AlertDialog(
+                          title: const Text('Çıkış'),
+                          content: const Text(
+                              'Oturumu kapatmak istiyor musunuz?'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('İptal'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Çıkış yap'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (ok == true && context.mounted) {
+                        await SessionController.instance.signOut();
+                      }
+                    },
+                  ),
+                ]),
+                const SizedBox(height: 12),
+              ],
+            );
+          },
+        ),
+
         // Theme selector
         _settingsCard(context, <Widget>[
           const Padding(
@@ -89,51 +142,47 @@ class _ThemeModeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextStyle segmentTextStyle =
         Theme.of(context).textTheme.labelLarge ?? const TextStyle(fontSize: 13);
+    final ThemeMode mode = ThemeController.instance.value;
 
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeController.instance,
-      builder: (BuildContext context, ThemeMode mode, _) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: SegmentedButton<ThemeMode>(
-            showSelectedIcon: false,
-            segments: <ButtonSegment<ThemeMode>>[
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.light,
-                icon: const Icon(Icons.light_mode_outlined, size: 18),
-                label: _segmentLabel('Aydınlık'),
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.dark,
-                icon: const Icon(Icons.dark_mode_outlined, size: 18),
-                label: _segmentLabel('Karanlık'),
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.system,
-                icon: const Icon(Icons.brightness_auto_outlined, size: 18),
-                label: _segmentLabel('Sistem'),
-              ),
-            ],
-            selected: <ThemeMode>{mode},
-            onSelectionChanged: (Set<ThemeMode> set) {
-              ThemeController.instance.set(set.first);
-            },
-            style: ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
-                EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-              ),
-              textStyle: WidgetStatePropertyAll<TextStyle>(segmentTextStyle),
-              shape: WidgetStateProperty.all(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: SegmentedButton<ThemeMode>(
+        showSelectedIcon: false,
+        segments: <ButtonSegment<ThemeMode>>[
+          ButtonSegment<ThemeMode>(
+            value: ThemeMode.light,
+            icon: const Icon(Icons.light_mode_outlined, size: 18),
+            label: _segmentLabel('Aydınlık'),
+          ),
+          ButtonSegment<ThemeMode>(
+            value: ThemeMode.dark,
+            icon: const Icon(Icons.dark_mode_outlined, size: 18),
+            label: _segmentLabel('Karanlık'),
+          ),
+          ButtonSegment<ThemeMode>(
+            value: ThemeMode.system,
+            icon: const Icon(Icons.brightness_auto_outlined, size: 18),
+            label: _segmentLabel('Sistem'),
+          ),
+        ],
+        selected: <ThemeMode>{mode},
+        onSelectionChanged: (Set<ThemeMode> set) {
+          ThemeController.instance.set(set.first);
+        },
+        style: ButtonStyle(
+          visualDensity: VisualDensity.compact,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+            EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          ),
+          textStyle: WidgetStatePropertyAll<TextStyle>(segmentTextStyle),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

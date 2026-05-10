@@ -47,6 +47,9 @@ dependencies:
   image_background_remover: ^2.0.0
   image: ^4.8.0
   image_cropper: ^12.2.1
+  google_sign_in: ^7.2.0
+  firebase_core: ^4.7.0
+  firebase_auth: ^6.4.0
 
 dev_dependencies:
   flutter_test:

@@ -40,7 +40,7 @@ class _CarStatsStrip extends StatelessWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.payments_outlined,
-            label: 'Ort. Bakım',
+            label: 'Bakım Maliyeti',
             value: _avgCostText,
             accent: accent,
           ),

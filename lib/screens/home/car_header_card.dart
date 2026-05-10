@@ -359,6 +359,7 @@ class _CarImage extends StatefulWidget {
 class _CarImageState extends State<_CarImage> {
   Uint8List? _normalized;
   bool _useFileFallback = false;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
@@ -381,15 +382,16 @@ class _CarImageState extends State<_CarImage> {
     if (path == null || path.isEmpty) return;
     final File f = File(path);
     if (!await f.exists()) return;
+    final int gen = ++_loadGeneration;
     try {
       final Uint8List bytes = await _CarHeroImageCache.normalizedForPath(path);
-      if (!mounted || widget.imagePath != path) return;
+      if (!mounted || gen != _loadGeneration) return;
       setState(() {
         _normalized = bytes;
         _useFileFallback = false;
       });
     } catch (_) {
-      if (!mounted || widget.imagePath != path) return;
+      if (!mounted || gen != _loadGeneration) return;
       setState(() => _useFileFallback = true);
     }
   }

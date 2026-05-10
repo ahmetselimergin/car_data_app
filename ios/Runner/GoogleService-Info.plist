@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>700093511102-0fkknbm0du6mbmhjg41p6s7bb7380u79.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.700093511102-0fkknbm0du6mbmhjg41p6s7bb7380u79</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDwas6Q5xY5SGdpeaiErp8XH-9BsDJhsts</string>
+	<key>GCM_SENDER_ID</key>
+	<string>700093511102</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.carDataApp</string>
+	<key>PROJECT_ID</key>
+	<string>cardex-8f893</string>
+	<key>STORAGE_BUCKET</key>
+	<string>cardex-8f893.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:700093511102:ios:f6ac6809314ad76ec0f5ef</string>
+</dict>
+</plist>

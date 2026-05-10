@@ -10,7 +10,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
   static const String _dbName = 'car_data.db';
-  static const int _dbVersion = 4;
+  static const int _dbVersion = 6;
 
   static const String tableCars = 'cars';
   static const String tableReminders = 'reminders';
@@ -52,6 +52,29 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE $tableCars ADD COLUMN transmission TEXT');
       await db.execute('ALTER TABLE $tableCars ADD COLUMN fuelType TEXT');
     }
+    if (oldVersion < 5) {
+      await db.execute(
+        'ALTER TABLE $tableMaintenance ADD COLUMN servisAdi TEXT',
+      );
+      await db.execute('ALTER TABLE $tableMaintenance ADD COLUMN notlar TEXT');
+      await db.execute(
+        'ALTER TABLE $tableMaintenance ADD COLUMN resmiServis INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE $tableMaintenance ADD COLUMN garantiKapsaminda INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE $tableMaintenance ADD COLUMN faturaAlindi INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE $tableMaintenance ADD COLUMN sigortaKarsiladi INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (oldVersion < 6) {
+      await db.execute(
+        'ALTER TABLE $tableMaintenance ADD COLUMN bakimKalemleri TEXT',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -89,6 +112,13 @@ class DatabaseHelper {
         tarih TEXT NOT NULL,
         km INTEGER NOT NULL,
         maliyet REAL NOT NULL,
+        servisAdi TEXT,
+        notlar TEXT,
+        resmiServis INTEGER NOT NULL DEFAULT 0,
+        garantiKapsaminda INTEGER NOT NULL DEFAULT 0,
+        faturaAlindi INTEGER NOT NULL DEFAULT 0,
+        sigortaKarsiladi INTEGER NOT NULL DEFAULT 0,
+        bakimKalemleri TEXT,
         FOREIGN KEY (carId) REFERENCES $tableCars (id) ON DELETE CASCADE
       )
     ''');
