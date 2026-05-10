@@ -1,0 +1,367 @@
+{
+  "_comment": "CardDex marka + model kataloğu (Türkiye pazarı odaklı). seed:catalog idempotent: yeni markaları/modelleri ekler; mevcut markada logoUrl boşsa CDN değerini yamar. Logo URL'leri https://cdn.simpleicons.org (SVG, şeffaf).",
+  "brands": [
+    { "slug": "audi", "name": "Audi", "sortOrder": 10, "logoUrl": "https://cdn.simpleicons.org/audi", "models": [
+      { "name": "A1", "bodyType": "Hatchback" },
+      { "name": "A3", "bodyType": "Hatchback" },
+      { "name": "A4", "bodyType": "Sedan" },
+      { "name": "A5", "bodyType": "Coupe" },
+      { "name": "A6", "bodyType": "Sedan" },
+      { "name": "A7", "bodyType": "Sedan" },
+      { "name": "A8", "bodyType": "Sedan" },
+      { "name": "Q2", "bodyType": "Crossover" },
+      { "name": "Q3", "bodyType": "SUV" },
+      { "name": "Q5", "bodyType": "SUV" },
+      { "name": "Q7", "bodyType": "SUV" },
+      { "name": "Q8", "bodyType": "SUV" },
+      { "name": "e-tron", "bodyType": "SUV" }
+    ] },
+    { "slug": "bmw", "name": "BMW", "sortOrder": 20, "logoUrl": "https://cdn.simpleicons.org/bmw", "models": [
+      { "name": "1 Serisi", "bodyType": "Hatchback" },
+      { "name": "2 Serisi", "bodyType": "Coupe" },
+      { "name": "3 Serisi", "bodyType": "Sedan" },
+      { "name": "4 Serisi", "bodyType": "Coupe" },
+      { "name": "5 Serisi", "bodyType": "Sedan" },
+      { "name": "6 Serisi", "bodyType": "Coupe" },
+      { "name": "7 Serisi", "bodyType": "Sedan" },
+      { "name": "8 Serisi", "bodyType": "Coupe" },
+      { "name": "X1", "bodyType": "Crossover" },
+      { "name": "X2", "bodyType": "Crossover" },
+      { "name": "X3", "bodyType": "SUV" },
+      { "name": "X4", "bodyType": "SUV" },
+      { "name": "X5", "bodyType": "SUV" },
+      { "name": "X6", "bodyType": "SUV" },
+      { "name": "X7", "bodyType": "SUV" },
+      { "name": "iX", "bodyType": "SUV" },
+      { "name": "i4", "bodyType": "Sedan" }
+    ] },
+    { "slug": "byd", "name": "BYD", "sortOrder": 30, "logoUrl": "https://cdn.simpleicons.org/byd", "models": [
+      { "name": "Atto 3", "bodyType": "SUV" },
+      { "name": "Han", "bodyType": "Sedan" },
+      { "name": "Seal", "bodyType": "Sedan" },
+      { "name": "Tang", "bodyType": "SUV" },
+      { "name": "Dolphin", "bodyType": "Hatchback" }
+    ] },
+    { "slug": "chevrolet", "name": "Chevrolet", "sortOrder": 40, "logoUrl": "https://cdn.simpleicons.org/chevrolet", "models": [
+      { "name": "Aveo", "bodyType": "Hatchback" },
+      { "name": "Cruze", "bodyType": "Sedan" },
+      { "name": "Captiva", "bodyType": "SUV" },
+      { "name": "Spark", "bodyType": "Hatchback" },
+      { "name": "Trax", "bodyType": "Crossover" }
+    ] },
+    { "slug": "citroen", "name": "Citroën", "sortOrder": 50, "logoUrl": "https://cdn.simpleicons.org/citroen", "models": [
+      { "name": "C1", "bodyType": "Hatchback" },
+      { "name": "C3", "bodyType": "Hatchback" },
+      { "name": "C4", "bodyType": "Hatchback" },
+      { "name": "C5", "bodyType": "Sedan" },
+      { "name": "C5 Aircross", "bodyType": "SUV" },
+      { "name": "Berlingo", "bodyType": "Van" },
+      { "name": "Jumpy", "bodyType": "Van" }
+    ] },
+    { "slug": "cupra", "name": "Cupra", "sortOrder": 55, "logoUrl": "https://cdn.simpleicons.org/cupra", "models": [
+      { "name": "Born", "bodyType": "Hatchback" },
+      { "name": "Formentor", "bodyType": "Crossover" },
+      { "name": "Leon", "bodyType": "Hatchback" },
+      { "name": "Ateca", "bodyType": "SUV" }
+    ] },
+    { "slug": "dacia", "name": "Dacia", "sortOrder": 60, "logoUrl": "https://cdn.simpleicons.org/dacia", "models": [
+      { "name": "Sandero", "bodyType": "Hatchback" },
+      { "name": "Logan", "bodyType": "Sedan" },
+      { "name": "Duster", "bodyType": "SUV" },
+      { "name": "Jogger", "bodyType": "Crossover" },
+      { "name": "Spring", "bodyType": "Hatchback" }
+    ] },
+    { "slug": "fiat", "name": "Fiat", "sortOrder": 70, "logoUrl": "https://cdn.simpleicons.org/fiat", "models": [
+      { "name": "500", "bodyType": "Hatchback" },
+      { "name": "500X", "bodyType": "Crossover" },
+      { "name": "Egea", "bodyType": "Sedan" },
+      { "name": "Egea Cross", "bodyType": "Crossover" },
+      { "name": "Doblo", "bodyType": "Van" },
+      { "name": "Fiorino", "bodyType": "Van" },
+      { "name": "Panda", "bodyType": "Hatchback" },
+      { "name": "Tipo", "bodyType": "Hatchback" }
+    ] },
+    { "slug": "ford", "name": "Ford", "sortOrder": 80, "logoUrl": "https://cdn.simpleicons.org/ford", "models": [
+      { "name": "Fiesta", "bodyType": "Hatchback" },
+      { "name": "Focus", "bodyType": "Hatchback" },
+      { "name": "Mondeo", "bodyType": "Sedan" },
+      { "name": "Kuga", "bodyType": "SUV" },
+      { "name": "Puma", "bodyType": "Crossover" },
+      { "name": "EcoSport", "bodyType": "Crossover" },
+      { "name": "Edge", "bodyType": "SUV" },
+      { "name": "Explorer", "bodyType": "SUV" },
+      { "name": "Mustang", "bodyType": "Coupe" },
+      { "name": "Tourneo Connect", "bodyType": "Van" },
+      { "name": "Tourneo Custom", "bodyType": "Van" },
+      { "name": "Transit", "bodyType": "Van" },
+      { "name": "Ranger", "bodyType": "Pickup" }
+    ] },
+    { "slug": "honda", "name": "Honda", "sortOrder": 90, "logoUrl": "https://cdn.simpleicons.org/honda", "models": [
+      { "name": "Civic", "bodyType": "Sedan" },
+      { "name": "Jazz", "bodyType": "Hatchback" },
+      { "name": "City", "bodyType": "Sedan" },
+      { "name": "CR-V", "bodyType": "SUV" },
+      { "name": "HR-V", "bodyType": "Crossover" },
+      { "name": "ZR-V", "bodyType": "Crossover" },
+      { "name": "Accord", "bodyType": "Sedan" }
+    ] },
+    { "slug": "hyundai", "name": "Hyundai", "sortOrder": 100, "logoUrl": "https://cdn.simpleicons.org/hyundai", "models": [
+      { "name": "i10", "bodyType": "Hatchback" },
+      { "name": "i20", "bodyType": "Hatchback" },
+      { "name": "i30", "bodyType": "Hatchback" },
+      { "name": "Accent", "bodyType": "Sedan" },
+      { "name": "Elantra", "bodyType": "Sedan" },
+      { "name": "Sonata", "bodyType": "Sedan" },
+      { "name": "Bayon", "bodyType": "Crossover" },
+      { "name": "Kona", "bodyType": "Crossover" },
+      { "name": "Tucson", "bodyType": "SUV" },
+      { "name": "Santa Fe", "bodyType": "SUV" },
+      { "name": "Ioniq 5", "bodyType": "Crossover" },
+      { "name": "Ioniq 6", "bodyType": "Sedan" }
+    ] },
+    { "slug": "jaguar", "name": "Jaguar", "sortOrder": 110, "logoUrl": "https://cdn.simpleicons.org/jaguar", "models": [
+      { "name": "XE", "bodyType": "Sedan" },
+      { "name": "XF", "bodyType": "Sedan" },
+      { "name": "F-Pace", "bodyType": "SUV" },
+      { "name": "E-Pace", "bodyType": "Crossover" },
+      { "name": "I-Pace", "bodyType": "SUV" },
+      { "name": "F-Type", "bodyType": "Coupe" }
+    ] },
+    { "slug": "jeep", "name": "Jeep", "sortOrder": 120, "logoUrl": "https://cdn.simpleicons.org/jeep", "models": [
+      { "name": "Renegade", "bodyType": "Crossover" },
+      { "name": "Compass", "bodyType": "SUV" },
+      { "name": "Cherokee", "bodyType": "SUV" },
+      { "name": "Grand Cherokee", "bodyType": "SUV" },
+      { "name": "Wrangler", "bodyType": "SUV" },
+      { "name": "Avenger", "bodyType": "Crossover" }
+    ] },
+    { "slug": "kia", "name": "Kia", "sortOrder": 130, "logoUrl": "https://cdn.simpleicons.org/kia", "models": [
+      { "name": "Picanto", "bodyType": "Hatchback" },
+      { "name": "Rio", "bodyType": "Hatchback" },
+      { "name": "Ceed", "bodyType": "Hatchback" },
+      { "name": "Stonic", "bodyType": "Crossover" },
+      { "name": "XCeed", "bodyType": "Crossover" },
+      { "name": "Sportage", "bodyType": "SUV" },
+      { "name": "Sorento", "bodyType": "SUV" },
+      { "name": "Niro", "bodyType": "Crossover" },
+      { "name": "EV6", "bodyType": "Crossover" }
+    ] },
+    { "slug": "land-rover", "name": "Land Rover", "sortOrder": 140, "logoUrl": "https://cdn.simpleicons.org/landrover", "models": [
+      { "name": "Defender", "bodyType": "SUV" },
+      { "name": "Discovery", "bodyType": "SUV" },
+      { "name": "Discovery Sport", "bodyType": "SUV" },
+      { "name": "Range Rover", "bodyType": "SUV" },
+      { "name": "Range Rover Sport", "bodyType": "SUV" },
+      { "name": "Range Rover Velar", "bodyType": "SUV" },
+      { "name": "Range Rover Evoque", "bodyType": "SUV" }
+    ] },
+    { "slug": "lexus", "name": "Lexus", "sortOrder": 150, "logoUrl": "https://cdn.simpleicons.org/lexus", "models": [
+      { "name": "CT", "bodyType": "Hatchback" },
+      { "name": "IS", "bodyType": "Sedan" },
+      { "name": "ES", "bodyType": "Sedan" },
+      { "name": "LS", "bodyType": "Sedan" },
+      { "name": "UX", "bodyType": "Crossover" },
+      { "name": "NX", "bodyType": "SUV" },
+      { "name": "RX", "bodyType": "SUV" },
+      { "name": "RZ", "bodyType": "SUV" }
+    ] },
+    { "slug": "mazda", "name": "Mazda", "sortOrder": 160, "logoUrl": "https://cdn.simpleicons.org/mazda", "models": [
+      { "name": "2", "bodyType": "Hatchback" },
+      { "name": "3", "bodyType": "Sedan" },
+      { "name": "6", "bodyType": "Sedan" },
+      { "name": "CX-3", "bodyType": "Crossover" },
+      { "name": "CX-30", "bodyType": "Crossover" },
+      { "name": "CX-5", "bodyType": "SUV" },
+      { "name": "CX-60", "bodyType": "SUV" },
+      { "name": "MX-5", "bodyType": "Cabrio" }
+    ] },
+    { "slug": "mercedes-benz", "name": "Mercedes-Benz", "sortOrder": 170, "logoUrl": "https://cdn.simpleicons.org/mercedes", "models": [
+      { "name": "A-Serisi", "bodyType": "Hatchback" },
+      { "name": "B-Serisi", "bodyType": "Crossover" },
+      { "name": "C-Serisi", "bodyType": "Sedan" },
+      { "name": "E-Serisi", "bodyType": "Sedan" },
+      { "name": "S-Serisi", "bodyType": "Sedan" },
+      { "name": "CLA", "bodyType": "Sedan" },
+      { "name": "CLS", "bodyType": "Sedan" },
+      { "name": "GLA", "bodyType": "Crossover" },
+      { "name": "GLB", "bodyType": "SUV" },
+      { "name": "GLC", "bodyType": "SUV" },
+      { "name": "GLE", "bodyType": "SUV" },
+      { "name": "GLS", "bodyType": "SUV" },
+      { "name": "G-Class", "bodyType": "SUV" },
+      { "name": "Vito", "bodyType": "Van" },
+      { "name": "EQA", "bodyType": "Crossover" },
+      { "name": "EQE", "bodyType": "Sedan" },
+      { "name": "EQS", "bodyType": "Sedan" }
+    ] },
+    { "slug": "mini", "name": "MINI", "sortOrder": 180, "logoUrl": "https://cdn.simpleicons.org/mini", "models": [
+      { "name": "Cooper", "bodyType": "Hatchback" },
+      { "name": "Cooper SE", "bodyType": "Hatchback" },
+      { "name": "Clubman", "bodyType": "Station Wagon" },
+      { "name": "Countryman", "bodyType": "Crossover" },
+      { "name": "Convertible", "bodyType": "Cabrio" }
+    ] },
+    { "slug": "mitsubishi", "name": "Mitsubishi", "sortOrder": 190, "logoUrl": "https://cdn.simpleicons.org/mitsubishimotors", "models": [
+      { "name": "Space Star", "bodyType": "Hatchback" },
+      { "name": "ASX", "bodyType": "Crossover" },
+      { "name": "Eclipse Cross", "bodyType": "Crossover" },
+      { "name": "Outlander", "bodyType": "SUV" },
+      { "name": "L200", "bodyType": "Pickup" }
+    ] },
+    { "slug": "nissan", "name": "Nissan", "sortOrder": 200, "logoUrl": "https://cdn.simpleicons.org/nissan", "models": [
+      { "name": "Micra", "bodyType": "Hatchback" },
+      { "name": "Note", "bodyType": "Hatchback" },
+      { "name": "Juke", "bodyType": "Crossover" },
+      { "name": "Qashqai", "bodyType": "Crossover" },
+      { "name": "X-Trail", "bodyType": "SUV" },
+      { "name": "Leaf", "bodyType": "Hatchback" },
+      { "name": "Ariya", "bodyType": "Crossover" },
+      { "name": "Navara", "bodyType": "Pickup" }
+    ] },
+    { "slug": "opel", "name": "Opel", "sortOrder": 210, "logoUrl": "https://cdn.simpleicons.org/opel", "models": [
+      { "name": "Astra", "bodyType": "Hatchback" },
+      { "name": "Corsa", "bodyType": "Hatchback" },
+      { "name": "Insignia", "bodyType": "Sedan" },
+      { "name": "Mokka", "bodyType": "Crossover" },
+      { "name": "Crossland", "bodyType": "Crossover" },
+      { "name": "Grandland", "bodyType": "SUV" },
+      { "name": "Combo", "bodyType": "Van" }
+    ] },
+    { "slug": "peugeot", "name": "Peugeot", "sortOrder": 220, "logoUrl": "https://cdn.simpleicons.org/peugeot", "models": [
+      { "name": "208", "bodyType": "Hatchback" },
+      { "name": "301", "bodyType": "Sedan" },
+      { "name": "308", "bodyType": "Hatchback" },
+      { "name": "508", "bodyType": "Sedan" },
+      { "name": "2008", "bodyType": "Crossover" },
+      { "name": "3008", "bodyType": "Crossover" },
+      { "name": "5008", "bodyType": "SUV" },
+      { "name": "Rifter", "bodyType": "Van" },
+      { "name": "Partner", "bodyType": "Van" }
+    ] },
+    { "slug": "porsche", "name": "Porsche", "sortOrder": 230, "logoUrl": "https://cdn.simpleicons.org/porsche", "models": [
+      { "name": "911", "bodyType": "Coupe" },
+      { "name": "718 Cayman", "bodyType": "Coupe" },
+      { "name": "718 Boxster", "bodyType": "Cabrio" },
+      { "name": "Panamera", "bodyType": "Sedan" },
+      { "name": "Macan", "bodyType": "SUV" },
+      { "name": "Cayenne", "bodyType": "SUV" },
+      { "name": "Taycan", "bodyType": "Sedan" }
+    ] },
+    { "slug": "renault", "name": "Renault", "sortOrder": 240, "logoUrl": "https://cdn.simpleicons.org/renault", "models": [
+      { "name": "Clio", "bodyType": "Hatchback" },
+      { "name": "Megane", "bodyType": "Hatchback" },
+      { "name": "Megane E-Tech", "bodyType": "Crossover" },
+      { "name": "Symbol", "bodyType": "Sedan" },
+      { "name": "Talisman", "bodyType": "Sedan" },
+      { "name": "Captur", "bodyType": "Crossover" },
+      { "name": "Kadjar", "bodyType": "Crossover" },
+      { "name": "Koleos", "bodyType": "SUV" },
+      { "name": "Austral", "bodyType": "Crossover" },
+      { "name": "Espace", "bodyType": "SUV" },
+      { "name": "Trafic", "bodyType": "Van" },
+      { "name": "Kangoo", "bodyType": "Van" }
+    ] },
+    { "slug": "seat", "name": "SEAT", "sortOrder": 250, "logoUrl": "https://cdn.simpleicons.org/seat", "models": [
+      { "name": "Ibiza", "bodyType": "Hatchback" },
+      { "name": "Leon", "bodyType": "Hatchback" },
+      { "name": "Arona", "bodyType": "Crossover" },
+      { "name": "Ateca", "bodyType": "SUV" },
+      { "name": "Tarraco", "bodyType": "SUV" }
+    ] },
+    { "slug": "skoda", "name": "Škoda", "sortOrder": 260, "logoUrl": "https://cdn.simpleicons.org/skoda", "models": [
+      { "name": "Fabia", "bodyType": "Hatchback" },
+      { "name": "Scala", "bodyType": "Hatchback" },
+      { "name": "Octavia", "bodyType": "Hatchback" },
+      { "name": "Superb", "bodyType": "Sedan" },
+      { "name": "Kamiq", "bodyType": "Crossover" },
+      { "name": "Karoq", "bodyType": "Crossover" },
+      { "name": "Kodiaq", "bodyType": "SUV" },
+      { "name": "Enyaq iV", "bodyType": "SUV" }
+    ] },
+    { "slug": "smart", "name": "smart", "sortOrder": 270, "logoUrl": "https://cdn.simpleicons.org/smart", "models": [
+      { "name": "fortwo", "bodyType": "Hatchback" },
+      { "name": "forfour", "bodyType": "Hatchback" },
+      { "name": "#1", "bodyType": "Crossover" },
+      { "name": "#3", "bodyType": "Crossover" }
+    ] },
+    { "slug": "ssangyong", "name": "SsangYong", "sortOrder": 280, "logoUrl": "https://cdn.simpleicons.org/ssangyong", "models": [
+      { "name": "Tivoli", "bodyType": "Crossover" },
+      { "name": "Korando", "bodyType": "SUV" },
+      { "name": "Rexton", "bodyType": "SUV" },
+      { "name": "Musso", "bodyType": "Pickup" },
+      { "name": "Torres", "bodyType": "SUV" }
+    ] },
+    { "slug": "subaru", "name": "Subaru", "sortOrder": 290, "logoUrl": "https://cdn.simpleicons.org/subaru", "models": [
+      { "name": "Impreza", "bodyType": "Hatchback" },
+      { "name": "Legacy", "bodyType": "Sedan" },
+      { "name": "XV", "bodyType": "Crossover" },
+      { "name": "Forester", "bodyType": "SUV" },
+      { "name": "Outback", "bodyType": "Station Wagon" }
+    ] },
+    { "slug": "suzuki", "name": "Suzuki", "sortOrder": 300, "logoUrl": "https://cdn.simpleicons.org/suzuki", "models": [
+      { "name": "Swift", "bodyType": "Hatchback" },
+      { "name": "Baleno", "bodyType": "Hatchback" },
+      { "name": "Ignis", "bodyType": "Crossover" },
+      { "name": "Vitara", "bodyType": "SUV" },
+      { "name": "S-Cross", "bodyType": "Crossover" },
+      { "name": "Jimny", "bodyType": "SUV" }
+    ] },
+    { "slug": "tesla", "name": "Tesla", "sortOrder": 310, "logoUrl": "https://cdn.simpleicons.org/tesla", "models": [
+      { "name": "Model 3", "bodyType": "Sedan" },
+      { "name": "Model Y", "bodyType": "Crossover" },
+      { "name": "Model S", "bodyType": "Sedan" },
+      { "name": "Model X", "bodyType": "SUV" },
+      { "name": "Cybertruck", "bodyType": "Pickup" }
+    ] },
+    { "slug": "togg", "name": "Togg", "sortOrder": 320, "logoUrl": null, "models": [
+      { "name": "T10X", "bodyType": "Crossover" },
+      { "name": "T10F", "bodyType": "Sedan" }
+    ] },
+    { "slug": "toyota", "name": "Toyota", "sortOrder": 330, "logoUrl": "https://cdn.simpleicons.org/toyota", "models": [
+      { "name": "Aygo X", "bodyType": "Hatchback" },
+      { "name": "Yaris", "bodyType": "Hatchback" },
+      { "name": "Yaris Cross", "bodyType": "Crossover" },
+      { "name": "Corolla", "bodyType": "Sedan" },
+      { "name": "Corolla Cross", "bodyType": "Crossover" },
+      { "name": "C-HR", "bodyType": "Crossover" },
+      { "name": "RAV4", "bodyType": "SUV" },
+      { "name": "bZ4X", "bodyType": "SUV" },
+      { "name": "Highlander", "bodyType": "SUV" },
+      { "name": "Camry", "bodyType": "Sedan" },
+      { "name": "Hilux", "bodyType": "Pickup" },
+      { "name": "Land Cruiser", "bodyType": "SUV" },
+      { "name": "Proace City", "bodyType": "Van" }
+    ] },
+    { "slug": "volkswagen", "name": "Volkswagen", "sortOrder": 340, "logoUrl": "https://cdn.simpleicons.org/volkswagen", "models": [
+      { "name": "up!", "bodyType": "Hatchback" },
+      { "name": "Polo", "bodyType": "Hatchback" },
+      { "name": "Golf", "bodyType": "Hatchback" },
+      { "name": "Jetta", "bodyType": "Sedan" },
+      { "name": "Passat", "bodyType": "Sedan" },
+      { "name": "Arteon", "bodyType": "Sedan" },
+      { "name": "T-Cross", "bodyType": "Crossover" },
+      { "name": "T-Roc", "bodyType": "Crossover" },
+      { "name": "Tiguan", "bodyType": "SUV" },
+      { "name": "Touareg", "bodyType": "SUV" },
+      { "name": "Touran", "bodyType": "Van" },
+      { "name": "Caddy", "bodyType": "Van" },
+      { "name": "Transporter", "bodyType": "Van" },
+      { "name": "ID.3", "bodyType": "Hatchback" },
+      { "name": "ID.4", "bodyType": "Crossover" },
+      { "name": "ID.5", "bodyType": "Crossover" },
+      { "name": "ID.7", "bodyType": "Sedan" },
+      { "name": "ID.Buzz", "bodyType": "Van" }
+    ] },
+    { "slug": "volvo", "name": "Volvo", "sortOrder": 350, "logoUrl": "https://cdn.simpleicons.org/volvo", "models": [
+      { "name": "S60", "bodyType": "Sedan" },
+      { "name": "S90", "bodyType": "Sedan" },
+      { "name": "V60", "bodyType": "Station Wagon" },
+      { "name": "V90", "bodyType": "Station Wagon" },
+      { "name": "XC40", "bodyType": "Crossover" },
+      { "name": "XC60", "bodyType": "SUV" },
+      { "name": "XC90", "bodyType": "SUV" },
+      { "name": "EX30", "bodyType": "Crossover" },
+      { "name": "EX90", "bodyType": "SUV" }
+    ] }
+  ]
+}
