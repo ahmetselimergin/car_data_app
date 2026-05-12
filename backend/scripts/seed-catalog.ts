@@ -59,16 +59,17 @@ async function main() {
       process.stdout.write(`+ ${b.name}`);
     } else {
       brandsExisting += 1;
-      // Mevcut markada logo yoksa ve seed'de varsa yamala
-      if (!brand.logoUrl && b.logoUrl) {
+      // Seed ile mevcut marka logosunu senkron tut (güncel URL veya null)
+      const desiredLogo = b.logoUrl ?? null;
+      if ((brand.logoUrl ?? null) !== desiredLogo) {
         const updated = await db
           .update(schema.brands)
-          .set({ logoUrl: b.logoUrl, updatedAt: new Date() })
+          .set({ logoUrl: desiredLogo, updatedAt: new Date() })
           .where(eq(schema.brands.id, brand.id))
           .returning();
         brand = updated[0]!;
         logosPatched += 1;
-        process.stdout.write(`= ${b.name} (logo eklendi)`);
+        process.stdout.write(`= ${b.name} (logo güncellendi)`);
       } else {
         process.stdout.write(`= ${b.name}`);
       }

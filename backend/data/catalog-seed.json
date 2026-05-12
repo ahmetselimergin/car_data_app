@@ -35,7 +35,7 @@
       { "name": "iX", "bodyType": "SUV" },
       { "name": "i4", "bodyType": "Sedan" }
     ] },
-    { "slug": "byd", "name": "BYD", "sortOrder": 30, "logoUrl": "https://cdn.simpleicons.org/byd", "models": [
+    { "slug": "byd", "name": "BYD", "sortOrder": 30, "logoUrl": "/uploads/brands/byd.svg", "models": [
       { "name": "Atto 3", "bodyType": "SUV" },
       { "name": "Han", "bodyType": "Sedan" },
       { "name": "Seal", "bodyType": "Sedan" },
@@ -58,7 +58,7 @@
       { "name": "Berlingo", "bodyType": "Van" },
       { "name": "Jumpy", "bodyType": "Van" }
     ] },
-    { "slug": "cupra", "name": "Cupra", "sortOrder": 55, "logoUrl": "https://cdn.simpleicons.org/cupra", "models": [
+    { "slug": "cupra", "name": "Cupra", "sortOrder": 55, "logoUrl": "/uploads/brands/cupra.svg", "models": [
       { "name": "Born", "bodyType": "Hatchback" },
       { "name": "Formentor", "bodyType": "Crossover" },
       { "name": "Leon", "bodyType": "Hatchback" },
@@ -119,7 +119,7 @@
       { "name": "Ioniq 5", "bodyType": "Crossover" },
       { "name": "Ioniq 6", "bodyType": "Sedan" }
     ] },
-    { "slug": "jaguar", "name": "Jaguar", "sortOrder": 110, "logoUrl": "https://cdn.simpleicons.org/jaguar", "models": [
+    { "slug": "jaguar", "name": "Jaguar", "sortOrder": 110, "logoUrl": "/uploads/brands/jaguar.svg", "models": [
       { "name": "XE", "bodyType": "Sedan" },
       { "name": "XF", "bodyType": "Sedan" },
       { "name": "F-Pace", "bodyType": "SUV" },
@@ -146,7 +146,7 @@
       { "name": "Niro", "bodyType": "Crossover" },
       { "name": "EV6", "bodyType": "Crossover" }
     ] },
-    { "slug": "land-rover", "name": "Land Rover", "sortOrder": 140, "logoUrl": "https://cdn.simpleicons.org/landrover", "models": [
+    { "slug": "land-rover", "name": "Land Rover", "sortOrder": 140, "logoUrl": "/uploads/brands/land-rover.svg", "models": [
       { "name": "Defender", "bodyType": "SUV" },
       { "name": "Discovery", "bodyType": "SUV" },
       { "name": "Discovery Sport", "bodyType": "SUV" },
@@ -155,7 +155,7 @@
       { "name": "Range Rover Velar", "bodyType": "SUV" },
       { "name": "Range Rover Evoque", "bodyType": "SUV" }
     ] },
-    { "slug": "lexus", "name": "Lexus", "sortOrder": 150, "logoUrl": "https://cdn.simpleicons.org/lexus", "models": [
+    { "slug": "lexus", "name": "Lexus", "sortOrder": 150, "logoUrl": "/uploads/brands/lexus.svg", "models": [
       { "name": "CT", "bodyType": "Hatchback" },
       { "name": "IS", "bodyType": "Sedan" },
       { "name": "ES", "bodyType": "Sedan" },
@@ -175,7 +175,7 @@
       { "name": "CX-60", "bodyType": "SUV" },
       { "name": "MX-5", "bodyType": "Cabrio" }
     ] },
-    { "slug": "mercedes-benz", "name": "Mercedes-Benz", "sortOrder": 170, "logoUrl": "https://cdn.simpleicons.org/mercedes", "models": [
+    { "slug": "mercedes-benz", "name": "Mercedes-Benz", "sortOrder": 170, "logoUrl": "/uploads/brands/mercedes-benz.svg", "models": [
       { "name": "A-Serisi", "bodyType": "Hatchback" },
       { "name": "B-Serisi", "bodyType": "Crossover" },
       { "name": "C-Serisi", "bodyType": "Sedan" },
@@ -201,7 +201,7 @@
       { "name": "Countryman", "bodyType": "Crossover" },
       { "name": "Convertible", "bodyType": "Cabrio" }
     ] },
-    { "slug": "mitsubishi", "name": "Mitsubishi", "sortOrder": 190, "logoUrl": "https://cdn.simpleicons.org/mitsubishimotors", "models": [
+    { "slug": "mitsubishi", "name": "Mitsubishi", "sortOrder": 190, "logoUrl": null, "models": [
       { "name": "Space Star", "bodyType": "Hatchback" },
       { "name": "ASX", "bodyType": "Crossover" },
       { "name": "Eclipse Cross", "bodyType": "Crossover" },
@@ -284,7 +284,7 @@
       { "name": "#1", "bodyType": "Crossover" },
       { "name": "#3", "bodyType": "Crossover" }
     ] },
-    { "slug": "ssangyong", "name": "SsangYong", "sortOrder": 280, "logoUrl": "https://cdn.simpleicons.org/ssangyong", "models": [
+    { "slug": "ssangyong", "name": "SsangYong", "sortOrder": 280, "logoUrl": "/uploads/brands/ssangyong.svg", "models": [
       { "name": "Tivoli", "bodyType": "Crossover" },
       { "name": "Korando", "bodyType": "SUV" },
       { "name": "Rexton", "bodyType": "SUV" },
