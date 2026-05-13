@@ -9,12 +9,13 @@ import {
   Gauge,
   Handshake,
   Layers,
+  LogOut,
   ShieldCheck,
   Tag,
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -36,7 +37,7 @@ type GroupItem = {
 
 const NAV: (LeafItem | GroupItem)[] = [
   {
-    href: "/",
+    href: "/dashboard",
     label: "Dashboard",
     icon: Gauge,
   },
@@ -69,7 +70,7 @@ const NAV: (LeafItem | GroupItem)[] = [
 ];
 
 function isActive(href: string, pathname: string): boolean {
-  if (href === "/") return pathname === "/";
+  if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -187,6 +188,15 @@ function NavGroup({
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router   = useRouter();
+  const [loggingOut, setLoggingOut] = React.useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside className="bg-card border-border sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r">
@@ -220,6 +230,15 @@ export function Sidebar() {
         >
           <FileSignature className="size-3.5" /> API durumu
         </a>
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="text-muted-foreground hover:text-destructive inline-flex w-full items-center gap-2 text-xs transition-colors disabled:opacity-50"
+        >
+          <LogOut className="size-3.5" />
+          {loggingOut ? "Çıkılıyor..." : "Çıkış Yap"}
+        </button>
       </div>
     </aside>
   );

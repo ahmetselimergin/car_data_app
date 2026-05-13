@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { MobileBar, Sidebar } from "@/components/sidebar";
+import { ClientShell } from "@/components/client-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CarDEX Yönetim",
-  description: "CarDEX admin paneli",
+  title: "CarDEX",
+  description: "CarDEX — Araç Veri Yönetim Sistemi",
 };
 
 export default function RootLayout({
@@ -28,13 +28,7 @@ export default function RootLayout({
     >
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <MobileBar />
-              <main className="min-w-0 flex-1">{children}</main>
-            </div>
-          </div>
+          <ClientShell>{children}</ClientShell>
         </ThemeProvider>
       </body>
     </html>
