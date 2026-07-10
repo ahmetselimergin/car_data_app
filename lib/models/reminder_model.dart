@@ -1,11 +1,8 @@
 enum ReminderType {
-  sigorta('Sigorta'),
-  kasko('Kasko'),
-  muayene('Muayene'),
-  egzoz('Egzoz');
-
-  final String label;
-  const ReminderType(this.label);
+  sigorta,
+  kasko,
+  muayene,
+  egzoz;
 
   static ReminderType fromString(String value) {
     return ReminderType.values.firstWhere(
@@ -68,7 +65,7 @@ class Reminder {
 
   @override
   String toString() =>
-      'Reminder(id: $id, carId: $carId, tur: ${tur.label}, '
+      'Reminder(id: $id, carId: $carId, tur: $tur, '
       'bitisTarihi: $bitisTarihi, hatirlatmaYapildiMi: $hatirlatmaYapildiMi)';
 
   @override

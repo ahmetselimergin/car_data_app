@@ -8,12 +8,15 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../data/car_catalog.dart';
+import '../l10n/l10n_ext.dart';
 import '../models/car_model.dart';
 import '../repositories/car_repository.dart';
 import '../services/background_removal_service.dart';
+import '../services/distance_unit_controller.dart';
 import '../services/image_storage_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/car_card_palette.dart';
+import '../utils/distance_format.dart';
 import '../utils/turkish_plate.dart';
 
 int _colorToArgb32(Color c) {
@@ -23,22 +26,6 @@ int _colorToArgb32(Color c) {
   final int b = (c.b * 255).round().clamp(0, 255);
   return (a << 24) | (r << 16) | (g << 8) | b;
 }
-
-const List<String> _kTransmissionOptions = <String>[
-  'Manuel',
-  'Otomatik',
-  'Yarı otomatik',
-  'CVT',
-];
-
-const List<String> _kFuelOptions = <String>[
-  'Benzin',
-  'Dizel',
-  'LPG',
-  'Hibrit',
-  'Plug-in hibrit',
-  'Elektrik',
-];
 
 class AddCarScreen extends StatefulWidget {
   const AddCarScreen({super.key, this.existing});
@@ -66,6 +53,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   String? _selectedFuel;
 
   bool _saving = false;
+  DistanceUnit _distanceUnit = DistanceUnitController.instance.value;
 
   /// Mevcut araçtan gelen fotoğraf yolu (DB'de kayıtlı).
   String? _existingImagePath;
@@ -104,8 +92,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
     _customMarka = TextEditingController();
     _customModel = TextEditingController();
     _km = TextEditingController(
-      text: c != null && c.km > 0 ? c.km.toString() : '',
+      text: c != null && c.km > 0
+          ? DistanceFormat.toInputText(
+              c.km,
+              DistanceUnitController.instance.value,
+            )
+          : '',
     );
+    _distanceUnit = DistanceUnitController.instance.value;
     _existingImagePath = c?.imagePath;
     _selectedCardColor =
         c?.cardColor != null ? Color(c!.cardColor!) : null;
@@ -131,10 +125,21 @@ class _AddCarScreenState extends State<AddCarScreen> {
       }
       _selectedYear = c.yil;
     }
+    DistanceUnitController.instance.addListener(_onDistanceUnitChanged);
+  }
+
+  void _onDistanceUnitChanged() {
+    final DistanceUnit next = DistanceUnitController.instance.value;
+    if (next == _distanceUnit) return;
+    setState(() {
+      _km.text = DistanceFormat.convertInputText(_km.text, _distanceUnit, next);
+      _distanceUnit = next;
+    });
   }
 
   @override
   void dispose() {
+    DistanceUnitController.instance.removeListener(_onDistanceUnitChanged);
     _plaka.dispose();
     _customMarka.dispose();
     _customModel.dispose();
@@ -142,8 +147,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
     super.dispose();
   }
 
-  List<String> _transmissionItems() {
-    final List<String> list = List<String>.from(_kTransmissionOptions);
+  List<String> _transmissionItems(AppLocalizations l10n) {
+    final List<String> list =
+        List<String>.from(localizedTransmissionOptions(l10n));
     final String? t = _selectedTransmission;
     if (t != null && t.isNotEmpty && !list.contains(t)) {
       list.insert(0, t);
@@ -151,8 +157,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
     return list;
   }
 
-  List<String> _fuelItems() {
-    final List<String> list = List<String>.from(_kFuelOptions);
+  List<String> _fuelItems(AppLocalizations l10n) {
+    final List<String> list = List<String>.from(localizedFuelOptions(l10n));
     final String? f = _selectedFuel;
     if (f != null && f.isNotEmpty && !list.contains(f)) {
       list.insert(0, f);
@@ -160,37 +166,30 @@ class _AddCarScreenState extends State<AddCarScreen> {
     return list;
   }
 
-  int _parseKmInput() {
-    final String raw = _km.text.trim();
-    if (raw.isEmpty) return 0;
-    final String digits =
-        raw.replaceAll(RegExp(r'[^\d]'), '');
-    if (digits.isEmpty) return 0;
-    return int.tryParse(digits) ?? 0;
-  }
+  int _parseKmInput() =>
+      DistanceFormat.parseInput(_km.text.trim(), _distanceUnit);
 
   Future<void> _confirmDelete() async {
     final Car? c = widget.existing;
     if (c?.id == null) return;
+    final AppLocalizations l10n = context.l10n;
     final bool? ok = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) {
         return AlertDialog(
-          title: const Text('Aracı sil'),
-          content: Text(
-            '${c!.marka} ${c.model} kaydı ve ilişkili bakım / hatırlatıcılar silinecek.',
-          ),
+          title: Text(l10n.deleteCarTitle),
+          content: Text(l10n.deleteCarMessage(c!.marka, c.model)),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('İptal'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.redAccent,
               ),
-              child: const Text('Sil'),
+              child: Text(l10n.delete),
             ),
           ],
         );
@@ -204,13 +203,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
       await _repo.deleteCar(c!.id!);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Araç silindi')),
+        SnackBar(content: Text(l10n.carDeleted)),
       );
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silinemedi: $e')),
+        SnackBar(content: Text(l10n.deleteFailed('$e'))),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -242,6 +241,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   /// uygulamayı tamamen durdurup `flutter run` ile yeniden derleyin (hot reload yetmez).
   Future<XFile?> _cropPickedFile(XFile picked) async {
     if (!_supportsNativeCrop) return picked;
+    final AppLocalizations l10n = context.l10n;
     try {
       final CroppedFile? cropped = await ImageCropper().cropImage(
         sourcePath: picked.path,
@@ -251,7 +251,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
         compressQuality: 92,
         uiSettings: <PlatformUiSettings>[
           AndroidUiSettings(
-            toolbarTitle: 'Fotoğrafı kırp',
+            toolbarTitle: l10n.cropPhotoTitle,
             toolbarColor: AppTheme.primary,
             toolbarWidgetColor: Colors.white,
             statusBarLight: false,
@@ -265,7 +265,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
             ],
           ),
           IOSUiSettings(
-            title: 'Kırp',
+            title: l10n.cropTitle,
             aspectRatioLockEnabled: false,
             resetAspectRatioEnabled: true,
             aspectRatioPickerButtonHidden: false,
@@ -277,19 +277,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
     } on MissingPluginException {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Kırpma henüz yüklü değil. Uygulamayı tamamen kapatıp yeniden başlatın '
-              '(Stop ■ sonra flutter run). Şimdilik fotoğraf kırpılmadan kullanılıyor.',
-            ),
-          ),
+          SnackBar(content: Text(l10n.cropPluginMissing)),
         );
       }
       return picked;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Kırpma atlandı: $e')),
+          SnackBar(content: Text(l10n.cropSkipped('$e'))),
         );
       }
       return picked;
@@ -317,12 +312,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fotoğraf seçilemedi: $e')),
+        SnackBar(content: Text(context.l10n.photoPickFailed('$e'))),
       );
     }
   }
 
   Future<void> _showImagePickerSheet() async {
+    final AppLocalizations l10n = context.l10n;
     final bool hasImage = _pickedImage != null ||
         (!_imageCleared && (_existingImagePath?.isNotEmpty ?? false));
     await showModalBottomSheet<void>(
@@ -335,7 +331,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Kameradan çek'),
+                title: Text(l10n.takePhoto),
                 onTap: () {
                   Navigator.of(c).pop();
                   _pickImage(ImageSource.camera);
@@ -343,7 +339,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Galeriden seç'),
+                title: Text(l10n.chooseFromGallery),
                 onTap: () {
                   Navigator.of(c).pop();
                   _pickImage(ImageSource.gallery);
@@ -352,7 +348,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
               if (_pickedImage != null && _supportsNativeCrop)
                 ListTile(
                   leading: const Icon(Icons.crop_outlined),
-                  title: const Text('Yeniden kırp'),
+                  title: Text(l10n.recrop),
                   onTap: () async {
                     Navigator.of(c).pop();
                     final XFile? cropped =
@@ -370,8 +366,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 ListTile(
                   leading: const Icon(Icons.delete_outline,
                       color: Colors.redAccent),
-                  title: const Text('Fotoğrafı kaldır',
-                      style: TextStyle(color: Colors.redAccent)),
+                  title: Text(l10n.removePhoto,
+                      style: const TextStyle(color: Colors.redAccent)),
                   onTap: () {
                     Navigator.of(c).pop();
                     setState(() {
@@ -390,22 +386,23 @@ class _AddCarScreenState extends State<AddCarScreen> {
   }
 
   Future<void> _save() async {
+    final AppLocalizations l10n = context.l10n;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_selectedYear == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Yıl seçilmedi')),
+        SnackBar(content: Text(l10n.yearNotSelected)),
       );
       return;
     }
     if (_selectedTransmission == null || _selectedTransmission!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Şanzıman tipi seçilmedi')),
+        SnackBar(content: Text(l10n.transmissionNotSelected)),
       );
       return;
     }
     if (_selectedFuel == null || _selectedFuel!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Yakıt tipi seçilmedi')),
+        SnackBar(content: Text(l10n.fuelNotSelected)),
       );
       return;
     }
@@ -418,7 +415,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
         String saved;
         if (_removeBackground) {
           if (mounted) {
-            setState(() => _processingMessage = 'Arka plan kaldırılıyor...');
+            setState(() => _processingMessage = l10n.removingBackground);
           }
           final List<int> rawBytes =
               await File(_pickedImage!.path).readAsBytes();
@@ -431,10 +428,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
             // Model başarısızsa orijinal fotoğrafa fallback yap.
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                      'Arka plan kaldırılamadı, orijinal fotoğraf kullanıldı.'),
-                ),
+                SnackBar(content: Text(l10n.backgroundRemovalFailed)),
               );
             }
             saved = await ImageStorageService.instance
@@ -477,13 +471,15 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_isEdit ? 'Araç güncellendi' : 'Araç eklendi')),
+        SnackBar(
+            content: Text(_isEdit ? l10n.carUpdated : l10n.carAdded)),
       );
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Hata: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError('$e'))),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -495,6 +491,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   }
 
   Widget _buildColorPicker() {
+    final AppLocalizations l10n = context.l10n;
     final int? autoSeed = widget.existing?.id;
     final Color autoColor = CarCardPalette.autoFor(autoSeed);
 
@@ -515,17 +512,17 @@ class _AddCarScreenState extends State<AddCarScreen> {
               const Icon(Icons.palette_outlined,
                   color: AppTheme.primary, size: 20),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Kart rengi',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  l10n.cardColorLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                 ),
               ),
               if (_selectedCardColor != null)
                 TextButton(
                   onPressed: () =>
                       setState(() => _selectedCardColor = null),
-                  child: const Text('Otomatik'),
+                  child: Text(l10n.cardColorAuto),
                 ),
             ],
           ),
@@ -564,6 +561,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   }
 
   Widget _buildBgRemovalToggle() {
+    final AppLocalizations l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -578,10 +576,10 @@ class _AddCarScreenState extends State<AddCarScreen> {
           const Icon(Icons.auto_fix_high,
               color: AppTheme.primary, size: 20),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Arka planı otomatik kaldır',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              l10n.autoRemoveBackground,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
             ),
           ),
           Switch.adaptive(
@@ -650,11 +648,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
       });
       if (cutout == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Arka plan önizlemesi oluşturulamadı; orijinal fotoğraf gösteriliyor.',
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.backgroundPreviewFailed)),
         );
       }
     } catch (_) {
@@ -735,6 +729,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final List<String> brandItems = <String>[
       ...CarCatalog.brandNames,
       CarCatalog.otherBrand,
@@ -751,13 +746,18 @@ class _AddCarScreenState extends State<AddCarScreen> {
     final bool modelIsOther =
         brandIsOther || _selectedModel == CarCatalog.otherModel;
 
+    String catalogLabel(String value) =>
+        value == CarCatalog.otherBrand || value == CarCatalog.otherModel
+            ? l10n.catalogOther
+            : value;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'Aracı düzenle' : 'Yeni araç'),
+        title: Text(_isEdit ? l10n.editCarTitle : l10n.newCarTitle),
         actions: _isEdit
             ? <Widget>[
                 IconButton(
-                  tooltip: 'Aracı sil',
+                  tooltip: l10n.deleteCarTooltip,
                   onPressed: _saving ? null : _confirmDelete,
                   icon: const Icon(Icons.delete_outline),
                 ),
@@ -786,25 +786,31 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 inputFormatters: <TextInputFormatter>[
                   TurkishPlateInputFormatter(maxLength: 12),
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'Plaka',
-                  hintText: '34 ABC 1234',
-                  prefixIcon: Icon(Icons.confirmation_number_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.plateLabel,
+                  hintText: l10n.plateHint,
+                  prefixIcon: const Icon(Icons.confirmation_number_outlined),
                 ),
-                validator: TurkishPlateValidator.formError,
+                validator: (String? value) => plateFormError(
+                  l10n,
+                  value,
+                  TurkishPlateValidator.isValid,
+                  (String c) =>
+                      RegExp(r'[ÇŞİÖÜĞçşıöüğı]').hasMatch(c),
+                ),
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
                 initialValue: _selectedBrand,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Marka',
-                  prefixIcon: Icon(Icons.factory_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.brandLabel,
+                  prefixIcon: const Icon(Icons.factory_outlined),
                 ),
                 items: brandItems
                     .map((String b) => DropdownMenuItem<String>(
                           value: b,
-                          child: Text(b),
+                          child: Text(catalogLabel(b)),
                         ))
                     .toList(),
                 onChanged: (String? v) {
@@ -818,20 +824,21 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   });
                 },
                 validator: (String? v) =>
-                    v == null || v.isEmpty ? 'Marka seç' : null,
+                    v == null || v.isEmpty ? l10n.selectBrand : null,
               ),
               if (brandIsOther) ...<Widget>[
                 const SizedBox(height: 14),
                 TextFormField(
                   controller: _customMarka,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Marka adı',
-                    hintText: 'Markanın tam adı',
-                    prefixIcon: Icon(Icons.edit_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.customBrandLabel,
+                    hintText: l10n.customBrandHint,
+                    prefixIcon: const Icon(Icons.edit_outlined),
                   ),
-                  validator: (String? v) =>
-                      (v ?? '').trim().isEmpty ? 'Marka adı gerekli' : null,
+                  validator: (String? v) => (v ?? '').trim().isEmpty
+                      ? l10n.customBrandRequired
+                      : null,
                 ),
               ],
               const SizedBox(height: 14),
@@ -839,14 +846,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: _selectedModel,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Model',
-                    prefixIcon: Icon(Icons.directions_car_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.modelLabel,
+                    prefixIcon: const Icon(Icons.directions_car_outlined),
                   ),
                   items: modelItems
                       .map((String m) => DropdownMenuItem<String>(
                             value: m,
-                            child: Text(m),
+                            child: Text(catalogLabel(m)),
                           ))
                       .toList(),
                   onChanged: _selectedBrand == null
@@ -860,29 +867,30 @@ class _AddCarScreenState extends State<AddCarScreen> {
                           });
                         },
                   validator: (String? v) =>
-                      v == null || v.isEmpty ? 'Model seç' : null,
+                      v == null || v.isEmpty ? l10n.selectModel : null,
                 ),
               if (modelIsOther) ...<Widget>[
                 if (!brandIsOther) const SizedBox(height: 14),
                 TextFormField(
                   controller: _customModel,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Model adı',
-                    hintText: 'Modelin tam adı',
-                    prefixIcon: Icon(Icons.edit_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.customModelLabel,
+                    hintText: l10n.customModelHint,
+                    prefixIcon: const Icon(Icons.edit_outlined),
                   ),
-                  validator: (String? v) =>
-                      (v ?? '').trim().isEmpty ? 'Model adı gerekli' : null,
+                  validator: (String? v) => (v ?? '').trim().isEmpty
+                      ? l10n.customModelRequired
+                      : null,
                 ),
               ],
               const SizedBox(height: 14),
               DropdownButtonFormField<int>(
                 initialValue: _selectedYear,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Yıl',
-                  prefixIcon: Icon(Icons.calendar_today_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.yearLabel,
+                  prefixIcon: const Icon(Icons.calendar_today_outlined),
                 ),
                 items: CarCatalog.yearOptions()
                     .map((int y) => DropdownMenuItem<int>(
@@ -891,7 +899,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                         ))
                     .toList(),
                 onChanged: (int? v) => setState(() => _selectedYear = v),
-                validator: (int? v) => v == null ? 'Yıl seç' : null,
+                validator: (int? v) => v == null ? l10n.selectYear : null,
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -901,17 +909,17 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   FilteringTextInputFormatter.allow(RegExp(r'[\d\s.,]')),
                   LengthLimitingTextInputFormatter(12),
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'Kilometre',
-                  hintText: 'Örn. 145000 veya 145.000',
-                  prefixIcon: Icon(Icons.speed_outlined),
+                decoration: InputDecoration(
+                  labelText: DistanceFormat.fieldLabel(l10n, _distanceUnit),
+                  hintText: DistanceFormat.fieldHint(l10n, _distanceUnit),
+                  prefixIcon: const Icon(Icons.speed_outlined),
                 ),
                 validator: (String? v) {
                   final String t = (v ?? '').trim();
                   if (t.isEmpty) return null;
                   final String digits = t.replaceAll(RegExp(r'[^\d]'), '');
-                  if (digits.isEmpty) return 'Geçerli km girin';
-                  if (int.tryParse(digits) == null) return 'Geçerli km girin';
+                  if (digits.isEmpty) return l10n.mileageInvalid;
+                  if (int.tryParse(digits) == null) return l10n.mileageInvalid;
                   return null;
                 },
               ),
@@ -919,11 +927,11 @@ class _AddCarScreenState extends State<AddCarScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _selectedTransmission,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Şanzıman tipi',
-                  prefixIcon: Icon(Icons.settings_suggest_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.transmissionLabel,
+                  prefixIcon: const Icon(Icons.settings_suggest_outlined),
                 ),
-                items: _transmissionItems()
+                items: _transmissionItems(l10n)
                     .map(
                       (String t) => DropdownMenuItem<String>(
                         value: t,
@@ -934,17 +942,17 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 onChanged: (String? v) =>
                     setState(() => _selectedTransmission = v),
                 validator: (String? v) =>
-                    v == null || v.isEmpty ? 'Şanzıman seç' : null,
+                    v == null || v.isEmpty ? l10n.selectTransmission : null,
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
                 initialValue: _selectedFuel,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Yakıt tipi',
-                  prefixIcon: Icon(Icons.local_gas_station_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.fuelTypeLabel,
+                  prefixIcon: const Icon(Icons.local_gas_station_outlined),
                 ),
-                items: _fuelItems()
+                items: _fuelItems(l10n)
                     .map(
                       (String t) => DropdownMenuItem<String>(
                         value: t,
@@ -954,7 +962,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     .toList(),
                 onChanged: (String? v) => setState(() => _selectedFuel = v),
                 validator: (String? v) =>
-                    v == null || v.isEmpty ? 'Yakıt seç' : null,
+                    v == null || v.isEmpty ? l10n.selectFuel : null,
               ),
               const SizedBox(height: 28),
               FilledButton.icon(
@@ -966,7 +974,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_outlined),
-                label: Text(_isEdit ? 'Güncelle' : 'Kaydet'),
+                label: Text(_isEdit ? l10n.updateButton : l10n.saveButton),
               ),
             ],
           ),

@@ -1,8 +1,11 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../l10n/l10n_ext.dart';
 import '../models/reminder_model.dart';
+import 'locale_controller.dart';
 
 class NotificationService {
   NotificationService._();
@@ -14,9 +17,6 @@ class NotificationService {
   bool _initialized = false;
 
   static const String _channelId = 'car_reminders_channel';
-  static const String _channelName = 'Araç Hatırlatıcıları';
-  static const String _channelDescription =
-      'Sigorta, kasko, muayene gibi tarihlerin yaklaştığını bildirir.';
 
   Future<void> init() async {
     if (_initialized) return;
@@ -40,6 +40,21 @@ class NotificationService {
 
     await _plugin.initialize(initSettings);
 
+    final AppLocalizations l10n =
+        lookupAppLocalizations(LocaleController.resolve(null));
+
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(
+          AndroidNotificationChannel(
+            _channelId,
+            l10n.notificationChannelName,
+            description: l10n.notificationChannelDescription,
+            importance: Importance.max,
+          ),
+        );
+
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -57,6 +72,9 @@ class NotificationService {
     await init();
     if (reminder.id == null) return;
 
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+
     final DateTime triggerLocal = reminder.bitisTarihi
         .subtract(Duration(days: daysBefore))
         .copyWith(hour: 9, minute: 0, second: 0, millisecond: 0, microsecond: 0);
@@ -68,26 +86,30 @@ class NotificationService {
     final tz.TZDateTime tzTime =
         tz.TZDateTime.from(triggerLocal, tz.local);
 
-    const AndroidNotificationDetails androidDetails =
+    final AppLocalizations l10n =
+        lookupAppLocalizations(LocaleController.resolve(null));
+    final String typeLabel = reminder.tur.localizedLabel(l10n);
+
+    final AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
       _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
+      l10n.notificationChannelName,
+      channelDescription: l10n.notificationChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
     );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
-    const NotificationDetails details = NotificationDetails(
+    final NotificationDetails details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
       macOS: iosDetails,
     );
 
-    final String title = '${reminder.tur.label} hatırlatması';
+    final String title = l10n.notificationTitle(typeLabel);
     final String body = carLabel.isEmpty
-        ? '${reminder.tur.label} bitişine $daysBefore gün kaldı.'
-        : '$carLabel için ${reminder.tur.label} bitişine $daysBefore gün kaldı.';
+        ? l10n.notificationBody(daysBefore, typeLabel)
+        : l10n.notificationBodyWithCar(daysBefore, typeLabel, carLabel);
 
     await _plugin.zonedSchedule(
       reminder.id!,

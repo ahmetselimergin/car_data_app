@@ -33,7 +33,8 @@ class _DashboardTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError && effective == null) {
-          return Center(child: Text('Hata: ${snap.error}'));
+          return Center(
+              child: Text(context.l10n.genericError(snap.error.toString())));
         }
         final _GarageData data = effective!;
 
@@ -107,7 +108,7 @@ class _DashboardTab extends StatelessWidget {
               // Dikkat gereken hatırlatmalar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text('Dikkat gerekenler',
+                child: Text(context.l10n.needsAttention,
                     style: Theme.of(context).textTheme.titleMedium),
               ),
               const SizedBox(height: 10),
@@ -125,7 +126,7 @@ class _DashboardTab extends StatelessWidget {
                 child: Row(
                   children: <Widget>[
                     Expanded(
-                      child: Text('Bakım geçmişi',
+                      child: Text(context.l10n.maintenanceHistory,
                           style: Theme.of(context).textTheme.titleMedium),
                     ),
                     TextButton(
@@ -138,7 +139,7 @@ class _DashboardTab extends StatelessWidget {
                       },
                       child: Row(
                         children: <Widget>[
-                          Text('Tümünü gör',
+                          Text(context.l10n.seeAll,
                               style: TextStyle(
                                   color: GarageCardTheming.vividForeground(
                                       garageAccent, context),
@@ -159,9 +160,8 @@ class _DashboardTab extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: _MutedTile(
                     icon: Icons.build_outlined,
-                    title: 'Henüz bakım kaydı yok',
-                    subtitle:
-                        'Yağ değişimi, lastik vb. eklemek için + tuşu',
+                    title: context.l10n.noMaintenanceYet,
+                    subtitle: context.l10n.noMaintenanceHint,
                     accent: garageAccent,
                   ),
                 ),
@@ -204,9 +204,9 @@ class _DashboardTab extends StatelessWidget {
                     await onRefresh();
                   },
                   icon: const Icon(Icons.notification_add_outlined),
-                  label: const Text(
-                    'Hatırlatıcı ekle',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                  label: Text(
+                    context.l10n.addReminder,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
               ),
@@ -229,7 +229,7 @@ class _DashboardTab extends StatelessWidget {
                   ),
                   icon: Icon(Icons.add, color: ctaOutline),
                   label: Text(
-                    'Yeni araç',
+                    context.l10n.newCar,
                     style: TextStyle(
                       color: ctaOutline,
                       fontWeight: FontWeight.w800,

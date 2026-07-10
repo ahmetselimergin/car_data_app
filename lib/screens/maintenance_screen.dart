@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:ms_undraw/ms_undraw.dart';
 
+import '../l10n/l10n_ext.dart';
 import '../models/car_model.dart';
 import '../models/maintenance_item_catalog.dart';
 import '../models/maintenance_model.dart';
 import '../repositories/maintenance_repository.dart';
 import '../services/date_helper.dart';
+import '../services/distance_unit_controller.dart';
 import '../theme/car_card_palette.dart';
+import '../utils/distance_format.dart';
+import '../widgets/undraw_empty_state.dart';
 
 bool _maintenanceListThreeLine(Maintenance m) {
   return (m.servisAdi?.trim().isNotEmpty == true) ||
@@ -17,6 +22,8 @@ bool _maintenanceListThreeLine(Maintenance m) {
 }
 
 Widget _maintenanceListSubtitle(BuildContext context, Maintenance m) {
+  final AppLocalizations l10n = context.l10n;
+  final String localeTag = localeTagFor(Localizations.localeOf(context));
   final TextTheme tt = Theme.of(context).textTheme;
   final Color muted =
       tt.bodySmall?.color ?? Theme.of(context).colorScheme.onSurfaceVariant;
@@ -25,7 +32,12 @@ Widget _maintenanceListSubtitle(BuildContext context, Maintenance m) {
     mainAxisSize: MainAxisSize.min,
     children: <Widget>[
       Text(
-        '${DateHelper.formatLong(m.tarih)} • ${m.km} km',
+        '${DateHelper.formatLong(m.tarih, localeTag)} • ${DistanceFormat.format(
+          m.km,
+          unit: DistanceUnitController.instance.value,
+          localeTag: localeTag,
+          l10n: l10n,
+        )}',
         style: tt.bodySmall,
       ),
       if (m.servisAdi?.trim().isNotEmpty == true) ...<Widget>[
@@ -44,8 +56,9 @@ Widget _maintenanceListSubtitle(BuildContext context, Maintenance m) {
           spacing: 6,
           runSpacing: 4,
           children: <Widget>[
-            for (final String label in MaintenanceItemCatalog.labelsInCatalogOrder(
-                m.bakimKalemleri))
+            for (final String label
+                in MaintenanceItemCatalog.labelsInCatalogOrder(
+                    l10n, m.bakimKalemleri))
               _maintenanceKalemChip(context, label),
           ],
         ),
@@ -65,10 +78,14 @@ Widget _maintenanceListSubtitle(BuildContext context, Maintenance m) {
           spacing: 6,
           runSpacing: 4,
           children: <Widget>[
-            if (m.resmiServis) _maintenanceDetailChip(context, 'Resmi servis'),
-            if (m.garantiKapsaminda) _maintenanceDetailChip(context, 'Garanti'),
-            if (m.faturaAlindi) _maintenanceDetailChip(context, 'Fatura/fiş'),
-            if (m.sigortaKarsiladi) _maintenanceDetailChip(context, 'Sigorta'),
+            if (m.resmiServis)
+              _maintenanceDetailChip(context, l10n.officialService),
+            if (m.garantiKapsaminda)
+              _maintenanceDetailChip(context, l10n.warranty),
+            if (m.faturaAlindi)
+              _maintenanceDetailChip(context, l10n.invoiceReceipt),
+            if (m.sigortaKarsiladi)
+              _maintenanceDetailChip(context, l10n.insurance),
           ],
         ),
       ],
@@ -127,8 +144,11 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
   final MaintenanceRepository _repo = SqliteMaintenanceRepository();
   late Future<List<Maintenance>> _future;
 
-  static final NumberFormat _money =
-      NumberFormat.currency(locale: 'tr_TR', symbol: '₺', decimalDigits: 2);
+  NumberFormat _moneyFor(BuildContext context) => NumberFormat.currency(
+        locale: localeTagFor(Localizations.localeOf(context)),
+        symbol: '₺',
+        decimalDigits: 2,
+      );
 
   @override
   void initState() {
@@ -166,9 +186,12 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final NumberFormat money = _moneyFor(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bakım günlüğü'),
+        title: Text(l10n.maintenanceLogTitle),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(28),
           child: Padding(
@@ -186,7 +209,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addEntry,
         icon: const Icon(Icons.add),
-        label: const Text('Bakım ekle'),
+        label: Text(l10n.addMaintenance),
       ),
       body: SafeArea(
         child: FutureBuilder<List<Maintenance>>(
@@ -200,23 +223,28 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
             final double total =
                 items.fold<double>(0, (double s, Maintenance m) => s + m.maliyet);
 
+            final Color accent = CarCardPalette.resolve(
+              argbValue: widget.car.cardColor,
+              seed: widget.car.id,
+            );
+
             return Column(
               children: <Widget>[
                 _SummaryCard(
                   car: widget.car,
                   total: total,
                   count: items.length,
-                  money: _money,
+                  money: money,
                 ),
                 Expanded(
                   child: items.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Text(
-                              'Henüz bakım kaydı yok.\nİlk bakımı eklemek için + tuşuna bas.',
-                              textAlign: TextAlign.center,
-                            ),
+                      ? Center(
+                          child: UndrawEmptyState(
+                            illustration: UnDrawIllustration.car_repair,
+                            title: l10n.noMaintenanceYet,
+                            subtitle: l10n.maintenanceEmpty,
+                            color: accent,
+                            height: 190,
                           ),
                         )
                       : ListView.separated(
@@ -247,7 +275,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      _money.format(m.maliyet),
+                                      money.format(m.maliyet),
                                       style: const TextStyle(
                                           fontWeight: FontWeight.w700),
                                     ),
@@ -256,7 +284,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                 subtitle:
                                     _maintenanceListSubtitle(context, m),
                                 trailing: IconButton(
-                                  tooltip: 'Sil',
+                                  tooltip: l10n.deleteTooltip,
                                   icon: const Icon(Icons.delete_outline,
                                       size: 22),
                                   onPressed: () => _delete(m),
@@ -296,6 +324,7 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final Color accent =
         CarCardPalette.resolve(argbValue: car.cardColor, seed: car.id);
     final Color accentSoft = Color.lerp(accent, Colors.white, 0.32)!;
@@ -319,7 +348,7 @@ class _SummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Toplam harcama',
+                Text(l10n.totalSpending,
                     style: TextStyle(color: Colors.white.withValues(alpha: 0.85))),
                 const SizedBox(height: 4),
                 Text(
@@ -347,7 +376,7 @@ class _SummaryCard extends StatelessWidget {
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.w800)),
-                Text('kayıt',
+                Text(l10n.recordsCount,
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 12)),
@@ -384,17 +413,20 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
   bool _garantiKapsaminda = false;
   bool _faturaAlindi = false;
   bool _sigortaKarsiladi = false;
+  DistanceUnit _distanceUnit = DistanceUnitController.instance.value;
 
   bool get _maliyetIstegeBagli =>
       _garantiKapsaminda || _sigortaKarsiladi;
 
-  List<(String, String)> get _filtrelenmisKalemler {
+  List<String> _filtrelenmisKalemIds(AppLocalizations l10n) {
     final String q = _kalemArama.text.trim().toLowerCase();
     if (q.isEmpty) {
-      return List<(String, String)>.from(MaintenanceItemCatalog.entries);
+      return MaintenanceItemCatalog.entries.map((e) => e.$1).toList();
     }
     return MaintenanceItemCatalog.entries
-        .where(( (String, String) e) => e.$2.toLowerCase().contains(q))
+        .where((e) =>
+            maintenanceItemLabel(l10n, e.$1).toLowerCase().contains(q))
+        .map((e) => e.$1)
         .toList();
   }
 
@@ -410,7 +442,24 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _distanceUnit = DistanceUnitController.instance.value;
+    DistanceUnitController.instance.addListener(_onDistanceUnitChanged);
+  }
+
+  void _onDistanceUnitChanged() {
+    final DistanceUnit next = DistanceUnitController.instance.value;
+    if (next == _distanceUnit) return;
+    setState(() {
+      _km.text = DistanceFormat.convertInputText(_km.text, _distanceUnit, next);
+      _distanceUnit = next;
+    });
+  }
+
+  @override
   void dispose() {
+    DistanceUnitController.instance.removeListener(_onDistanceUnitChanged);
     _islem.dispose();
     _km.dispose();
     _maliyet.dispose();
@@ -425,30 +474,31 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
       initialDate: _tarih,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
-      locale: const Locale('tr', 'TR'),
+      locale: Localizations.localeOf(context),
     );
     if (picked != null) setState(() => _tarih = picked);
   }
 
-  String? _validateMaliyet(String? v) {
+  String? _validateMaliyet(String? v, AppLocalizations l10n) {
     final String s = (v ?? '').trim().replaceAll(',', '.');
     if (s.isEmpty) {
-      return _maliyetIstegeBagli ? null : 'Maliyet gerekli';
+      return _maliyetIstegeBagli ? null : l10n.costRequired;
     }
     if (double.tryParse(s) == null) {
-      return 'Geçerli bir tutar gir';
+      return l10n.enterValidAmount;
     }
     return null;
   }
 
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final AppLocalizations l10n = context.l10n;
     final List<String> kalemlerOrdered =
         MaintenanceItemCatalog.idsInCatalogOrder(_secilenKalemIds);
     final String manualIslem = _islem.text.trim();
     final String islem = manualIslem.isNotEmpty
         ? manualIslem
-        : MaintenanceItemCatalog.joinLabels(kalemlerOrdered);
+        : MaintenanceItemCatalog.joinLabels(l10n, kalemlerOrdered);
     final String rawMaliyet =
         _maliyet.text.trim().replaceAll(',', '.');
     final double maliyet = rawMaliyet.isEmpty
@@ -458,7 +508,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
       carId: widget.carId,
       islem: islem,
       tarih: _tarih,
-      km: int.parse(_km.text.trim()),
+      km: DistanceFormat.parseInput(_km.text.trim(), _distanceUnit),
       maliyet: maliyet,
       servisAdi: _servisAdi.text.trim().isEmpty
           ? null
@@ -475,7 +525,13 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final String localeTag =
+        localeTagFor(Localizations.localeOf(context));
     final TextTheme tt = Theme.of(context).textTheme;
+    final DistanceUnit unit = _distanceUnit;
+    final List<String> filtrelenmisIds = _filtrelenmisKalemIds(l10n);
+
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -491,23 +547,23 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                'Yeni bakım kaydı',
+                l10n.newMaintenanceEntry,
                 style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _islem,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Başlık (isteğe bağlı)',
-                  hintText: 'Boş bırakırsanız seçtiklerinizden oluşturulur',
-                  prefixIcon: Icon(Icons.title_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.titleOptional,
+                  hintText: l10n.titleHint,
+                  prefixIcon: const Icon(Icons.title_outlined),
                 ),
                 validator: (String? v) {
                   final String t = (v ?? '').trim();
                   if (t.isNotEmpty) return null;
                   if (_secilenKalemIds.isNotEmpty) return null;
-                  return 'Başlık yazın veya alttan işlem seçin';
+                  return l10n.titleOrItemsRequired;
                 },
               ),
               const SizedBox(height: 12),
@@ -515,11 +571,11 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 onTap: _pickDate,
                 borderRadius: BorderRadius.circular(14),
                 child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Tarih',
-                    prefixIcon: Icon(Icons.calendar_today_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.dateLabel,
+                    prefixIcon: const Icon(Icons.calendar_today_outlined),
                   ),
-                  child: Text(DateHelper.formatLong(_tarih)),
+                  child: Text(DateHelper.formatLong(_tarih, localeTag)),
                 ),
               ),
               const SizedBox(height: 12),
@@ -532,14 +588,17 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                       inputFormatters: <TextInputFormatter>[
                         FilteringTextInputFormatter.digitsOnly,
                       ],
-                      decoration: const InputDecoration(
-                        labelText: 'KM',
-                        prefixIcon: Icon(Icons.speed_outlined),
+                      decoration: InputDecoration(
+                        labelText: DistanceFormat.fieldLabel(l10n, unit),
+                        hintText: DistanceFormat.fieldHint(l10n, unit),
+                        prefixIcon: const Icon(Icons.speed_outlined),
                       ),
                       validator: (String? v) {
-                        if ((v ?? '').trim().isEmpty) return 'KM gerekli';
+                        if ((v ?? '').trim().isEmpty) {
+                          return DistanceFormat.fieldRequired(l10n, unit);
+                        }
                         if (int.tryParse(v!.trim()) == null) {
-                          return 'Geçerli bir sayı gir';
+                          return l10n.enterValidNumber;
                         }
                         return null;
                       },
@@ -556,11 +615,11 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                             RegExp(r'[0-9.,]')),
                       ],
                       decoration: InputDecoration(
-                        labelText: 'Maliyet (₺)',
-                        hintText: _maliyetIstegeBagli ? 'İsteğe bağlı' : null,
+                        labelText: l10n.costLabel,
+                        hintText: _maliyetIstegeBagli ? l10n.optional : null,
                         prefixIcon: const Icon(Icons.payments_outlined),
                       ),
-                      validator: _validateMaliyet,
+                      validator: (String? v) => _validateMaliyet(v, l10n),
                     ),
                   ),
                 ],
@@ -568,7 +627,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
               if (_maliyetIstegeBagli) ...<Widget>[
                 const SizedBox(height: 6),
                 Text(
-                  'Garanti veya sigorta seçiliyse tutarı boş veya 0 bırakabilirsiniz.',
+                  l10n.costOptionalWithWarranty,
                   style: tt.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -576,21 +635,21 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
               ],
               const SizedBox(height: 20),
               Text(
-                'Ek bilgiler',
+                l10n.additionalInfo,
                 style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _servisAdi,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Servis veya usta (isteğe bağlı)',
-                  prefixIcon: Icon(Icons.storefront_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.serviceShopLabel,
+                  prefixIcon: const Icon(Icons.storefront_outlined),
                 ),
               ),
               const SizedBox(height: 14),
               Text(
-                'Yapılan işlemler',
+                l10n.workPerformed,
                 style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
@@ -599,12 +658,12 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 onChanged: (_) => setState(() {}),
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: 'İşlem ara…',
+                  hintText: l10n.searchWorkHint,
                   prefixIcon: const Icon(Icons.search, size: 22),
                   suffixIcon: _kalemArama.text.isEmpty
                       ? null
                       : IconButton(
-                          tooltip: 'Temizle',
+                          tooltip: l10n.clear,
                           icon: const Icon(Icons.clear),
                           onPressed: () {
                             _kalemArama.clear();
@@ -633,12 +692,12 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                   borderRadius: BorderRadius.circular(15),
                   child: SizedBox(
                     height: _kKalemGridHeight,
-                    child: _filtrelenmisKalemler.isEmpty
+                    child: filtrelenmisIds.isEmpty
                         ? Center(
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Text(
-                                'Aramanızla eşleşen işlem yok',
+                                l10n.noMatchingWork,
                                 textAlign: TextAlign.center,
                                 style: tt.bodySmall?.copyWith(
                                   color: Theme.of(context)
@@ -657,12 +716,11 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                               crossAxisSpacing: 4,
                               mainAxisSpacing: 2,
                             ),
-                            itemCount: _filtrelenmisKalemler.length,
+                            itemCount: filtrelenmisIds.length,
                             itemBuilder: (BuildContext context, int index) {
-                              final (String, String) kayit =
-                                  _filtrelenmisKalemler[index];
-                              final String id = kayit.$1;
-                              final String label = kayit.$2;
+                              final String id = filtrelenmisIds[index];
+                              final String label =
+                                  maintenanceItemLabel(l10n, id);
                               final bool secili =
                                   _secilenKalemIds.contains(id);
                               return InkWell(
@@ -714,8 +772,8 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   _secilenKalemIds.isEmpty
-                      ? 'Henüz seçim yok · Kutunun içinde kaydırarak tümünü görün'
-                      : '${_secilenKalemIds.length} işlem seçildi',
+                      ? l10n.noItemsSelectedHint
+                      : l10n.itemsSelectedCount(_secilenKalemIds.length),
                   style: tt.bodySmall?.copyWith(
                     color:
                         Theme.of(context).colorScheme.onSurfaceVariant,
@@ -724,7 +782,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Ödeme ve belge',
+                l10n.paymentAndDocuments,
                 style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
@@ -735,7 +793,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Resmi yetkili serviste yapıldı'),
+                title: Text(l10n.doneAtAuthorizedService),
               ),
               CheckboxListTile(
                 value: _garantiKapsaminda,
@@ -746,7 +804,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Garanti kapsamındaydı'),
+                title: Text(l10n.underWarranty),
               ),
               CheckboxListTile(
                 value: _faturaAlindi,
@@ -755,7 +813,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Fatura veya fiş alındı'),
+                title: Text(l10n.invoiceReceived),
               ),
               CheckboxListTile(
                 value: _sigortaKarsiladi,
@@ -766,7 +824,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Sigorta / kasko karşıladı'),
+                title: Text(l10n.coveredByInsurance),
               ),
               const SizedBox(height: 22),
               SizedBox(
@@ -774,7 +832,7 @@ class _MaintenanceEditorState extends State<_MaintenanceEditor> {
                 child: FilledButton.icon(
                   onPressed: _submit,
                   icon: const Icon(Icons.save_outlined),
-                  label: const Text('Kaydet'),
+                  label: Text(l10n.saveButton),
                 ),
               ),
             ],

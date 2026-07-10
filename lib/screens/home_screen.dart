@@ -5,6 +5,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ms_undraw/ms_undraw.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/car_model.dart';
 import '../models/maintenance_model.dart';
@@ -12,7 +14,11 @@ import '../models/reminder_model.dart';
 import '../repositories/car_repository.dart';
 import '../repositories/maintenance_repository.dart';
 import '../repositories/reminder_repository.dart';
+import '../l10n/l10n_ext.dart';
 import '../services/date_helper.dart';
+import '../services/distance_unit_controller.dart';
+import '../services/locale_controller.dart';
+import '../utils/distance_format.dart';
 import '../services/session_controller.dart';
 import '../utils/car_image_normalize.dart';
 import '../utils/turkish_plate.dart';
@@ -21,6 +27,7 @@ import '../theme/car_card_palette.dart';
 import '../theme/garage_card_theming.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/brand_logo_circle.dart';
+import '../widgets/undraw_empty_state.dart';
 import 'add_car_screen.dart';
 import 'maintenance_screen.dart';
 import 'reminder_screen.dart';

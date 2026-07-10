@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:ms_undraw/ms_undraw.dart';
 
+import '../l10n/l10n_ext.dart';
 import '../models/car_model.dart';
 import '../models/reminder_model.dart';
 import '../repositories/reminder_repository.dart';
 import '../services/date_helper.dart';
 import '../services/notification_service.dart';
+import '../theme/car_card_palette.dart';
+import '../widgets/undraw_empty_state.dart';
 import 'maintenance_screen.dart';
 
 class ReminderScreen extends StatefulWidget {
@@ -76,12 +80,16 @@ class _ReminderScreenState extends State<ReminderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final String localeTag =
+        localeTagFor(Localizations.localeOf(context));
+
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.car.marka} ${widget.car.model}'),
         actions: <Widget>[
           IconButton(
-            tooltip: 'Bakım günlüğü',
+            tooltip: l10n.maintenanceLogTooltip,
             icon: const Icon(Icons.build_outlined),
             onPressed: () {
               Navigator.of(context).push(
@@ -96,7 +104,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addOrEditReminder(),
         icon: const Icon(Icons.add),
-        label: const Text('Hatırlatıcı ekle'),
+        label: Text(l10n.addReminder),
       ),
       body: SafeArea(
         child: FutureBuilder<List<Reminder>>(
@@ -107,23 +115,17 @@ class _ReminderScreenState extends State<ReminderScreen> {
             }
             final List<Reminder> items = snap.data ?? <Reminder>[];
             if (items.isEmpty) {
+              final Color accent = CarCardPalette.resolve(
+                argbValue: widget.car.cardColor,
+                seed: widget.car.id,
+              );
               return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Icon(Icons.event_note_outlined,
-                          size: 56, color: Theme.of(context).hintColor),
-                      const SizedBox(height: 12),
-                      const Text('Henüz hatırlatıcı eklenmemiş.',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      const Text(
-                          'Sigorta, kasko, muayene veya egzoz bitiş tarihi ekleyebilirsin.',
-                          textAlign: TextAlign.center),
-                    ],
-                  ),
+                child: UndrawEmptyState(
+                  illustration: UnDrawIllustration.digital_calendar,
+                  title: l10n.remindersEmptyTitle,
+                  subtitle: l10n.remindersEmptySubtitle,
+                  color: accent,
+                  height: 190,
                 ),
               );
             }
@@ -153,16 +155,19 @@ class _ReminderScreenState extends State<ReminderScreen> {
                     return await showDialog<bool>(
                           context: context,
                           builder: (BuildContext c) => AlertDialog(
-                            title: const Text('Sil'),
+                            title: Text(l10n.delete),
                             content: Text(
-                                '${r.tur.label} hatırlatıcısı silinsin mi?'),
+                              l10n.deleteReminderMessage(
+                                r.tur.localizedLabel(l10n),
+                              ),
+                            ),
                             actions: <Widget>[
                               TextButton(
                                   onPressed: () => Navigator.pop(c, false),
-                                  child: const Text('Vazgeç')),
+                                  child: Text(l10n.dismiss)),
                               FilledButton(
                                   onPressed: () => Navigator.pop(c, true),
-                                  child: const Text('Sil')),
+                                  child: Text(l10n.delete)),
                             ],
                           ),
                         ) ??
@@ -185,12 +190,12 @@ class _ReminderScreenState extends State<ReminderScreen> {
                             Icon(DateHelper.iconFor(status), color: color),
                       ),
                       title: Text(
-                        r.tur.label,
+                        r.tur.localizedLabel(l10n),
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       subtitle: Text(
-                        '${DateHelper.formatLong(r.bitisTarihi)}\n'
-                        '${DateHelper.humanizeRemaining(r.bitisTarihi)} • ${status.label}',
+                        '${DateHelper.formatLong(r.bitisTarihi, localeTag)}\n'
+                        '${humanizeRemaining(l10n, r.bitisTarihi)} • ${status.localizedLabel(l10n)}',
                         style: TextStyle(color: color),
                       ),
                       isThreeLine: true,
@@ -236,8 +241,8 @@ class _ReminderEditorState extends State<_ReminderEditor> {
       initialDate: initial,
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 10),
-      helpText: 'Bitiş tarihini seç',
-      locale: const Locale('tr', 'TR'),
+      helpText: context.l10n.selectExpiryDate,
+      locale: Localizations.localeOf(context),
     );
     if (picked != null) setState(() => _date = picked);
   }
@@ -245,7 +250,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
   void _submit() {
     if (_date == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen bir bitiş tarihi seç')),
+        SnackBar(content: Text(context.l10n.expiryDateRequired)),
       );
       return;
     }
@@ -261,6 +266,9 @@ class _ReminderEditorState extends State<_ReminderEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final String localeTag =
+        localeTagFor(Localizations.localeOf(context));
     final ReminderStatus? status =
         _date == null ? null : DateHelper.statusFor(_date!);
     final Color? color =
@@ -278,9 +286,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            widget.existing == null
-                ? 'Yeni hatırlatıcı'
-                : 'Hatırlatıcıyı düzenle',
+            widget.existing == null ? l10n.newReminder : l10n.editReminder,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
@@ -293,7 +299,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
             children: ReminderType.values.map((ReminderType t) {
               final bool selected = t == _tur;
               return ChoiceChip(
-                label: Text(t.label),
+                label: Text(t.localizedLabel(l10n)),
                 selected: selected,
                 onSelected: (_) => setState(() => _tur = t),
               );
@@ -318,13 +324,13 @@ class _ReminderEditorState extends State<_ReminderEditor> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        const Text('Bitiş tarihi',
-                            style: TextStyle(fontSize: 12)),
+                        Text(l10n.expiryDateLabel,
+                            style: const TextStyle(fontSize: 12)),
                         const SizedBox(height: 2),
                         Text(
                           _date == null
-                              ? 'Tarih seçilmedi'
-                              : DateHelper.formatLong(_date!),
+                              ? l10n.dateNotSelected
+                              : DateHelper.formatLong(_date!, localeTag),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -354,7 +360,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${status.label} • ${DateHelper.humanizeRemaining(_date!)}',
+                  '${status.localizedLabel(l10n)} • ${humanizeRemaining(l10n, _date!)}',
                   style:
                       TextStyle(color: color, fontWeight: FontWeight.w600),
                 ),
@@ -364,7 +370,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
           FilledButton.icon(
             onPressed: _submit,
             icon: const Icon(Icons.save_outlined),
-            label: const Text('Kaydet'),
+            label: Text(l10n.saveButton),
           ),
         ],
       ),

@@ -12,14 +12,13 @@
 .swiftpm/
 migrate_working_dir/
 
-# Node (admin panel + API)
-backend/node_modules/
-backend/dist/
-backend/.env
-admin/node_modules/
-admin/.env
-admin/.env.local
-admin/.next/
+# Node (legacy paths — folders removed)
+# Flutter admin
+admin_desktop/.env
+admin_desktop/dist/
+
+# Secrets
+.env
 
 # IntelliJ related
 *.iml

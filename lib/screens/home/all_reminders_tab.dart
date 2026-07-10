@@ -20,7 +20,8 @@ class _AllRemindersTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError && effective == null) {
-          return Center(child: Text('Hata: ${snap.error}'));
+          return Center(
+              child: Text(context.l10n.genericError(snap.error.toString())));
         }
         final _GarageData data = effective!;
         final List<Reminder> reminders = List<Reminder>.of(data.reminders)
@@ -35,7 +36,7 @@ class _AllRemindersTab extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Expanded(
-                    child: Text('Hatırlatıcılar',
+                    child: Text(context.l10n.remindersTitle,
                         style: Theme.of(context).textTheme.headlineMedium),
                   ),
                 ],
@@ -43,14 +44,12 @@ class _AllRemindersTab extends StatelessWidget {
             ),
             Expanded(
               child: reminders.isEmpty
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text(
-                          'Henüz hatırlatıcı yok. Bir araca girip sigorta,\n'
-                          'kasko, muayene veya egzoz tarihi ekle.',
-                          textAlign: TextAlign.center,
-                        ),
+                  ? Center(
+                      child: UndrawEmptyState(
+                        illustration: UnDrawIllustration.calendar,
+                        title: context.l10n.remindersEmptyTitle,
+                        subtitle: context.l10n.allRemindersEmpty,
+                        height: 190,
                       ),
                     )
                   : ListView.separated(
@@ -88,6 +87,9 @@ class _ReminderFlatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final String localeTag =
+        localeTagFor(Localizations.localeOf(context));
     final ReminderStatus status = DateHelper.statusFor(reminder.bitisTarihi);
     final Color color = DateHelper.colorFor(status);
     return Container(
@@ -113,12 +115,12 @@ class _ReminderFlatTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('${reminder.tur.label} • ${car.plaka}',
+                Text('${reminder.tur.localizedLabel(l10n)} • ${car.plaka}',
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  '${DateHelper.formatLong(reminder.bitisTarihi)} • '
-                  '${DateHelper.humanizeRemaining(reminder.bitisTarihi)}',
+                  '${DateHelper.formatLong(reminder.bitisTarihi, localeTag)} • '
+                  '${humanizeRemaining(l10n, reminder.bitisTarihi)}',
                   style: TextStyle(color: color, fontSize: 12),
                 ),
               ],

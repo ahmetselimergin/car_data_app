@@ -1,13 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../services/auth_firebase_messages.dart';
+import '../l10n/l10n_ext.dart';
 import '../services/session_controller.dart';
-import 'auth_google_flow.dart';
 import 'auth_widgets.dart';
 import 'register_screen.dart';
 
-/// E-posta ile giriş veya Google; backend sonrası doğrulama buraya bağlanır.
+/// E-posta veya kullanıcı adı + şifre ile giriş (Supabase Auth).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,15 +16,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _email = TextEditingController();
+  final TextEditingController _loginId = TextEditingController();
   final TextEditingController _password = TextEditingController();
   bool _obscure = true;
   bool _busy = false;
-  bool _googleBusy = false;
 
   @override
   void dispose() {
-    _email.dispose();
+    _loginId.dispose();
     _password.dispose();
     super.dispose();
   }
@@ -35,13 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _busy = true);
     try {
       await SessionController.instance.signIn(
-        email: _email.text,
+        emailOrUsername: _loginId.text,
         password: _password.text,
       );
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(firebaseAuthMessage(e))),
+          SnackBar(content: Text(authErrorMessage(e, context.l10n))),
         );
       }
     } finally {
@@ -49,17 +47,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _google() async {
-    setState(() => _googleBusy = true);
-    try {
-      await tryEstablishSessionWithGoogle(context);
-    } finally {
-      if (mounted) setState(() => _googleBusy = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final TextTheme tt = Theme.of(context).textTheme;
 
@@ -67,13 +57,10 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: <Widget>[
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: AuthBrandingHeader(
-                title: 'Giriş yap',
-                subtitle:
-                    'Giriş Firebase Authentication ile yapılır. Verileriniz '
-                    'isteğe bağlı olarak sunucuya taşınana kadar araç kayıtları '
-                    'bu cihazda kalır.',
+                title: l10n.loginTitle,
+                subtitle: l10n.loginSubtitle,
               ),
             ),
             SliverPadding(
@@ -85,25 +72,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       TextFormField(
-                        controller: _email,
+                        controller: _loginId,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const <String>[
                           AutofillHints.username,
                           AutofillHints.email,
                         ],
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'E-posta',
-                          prefixIcon: Icon(Icons.mail_outline_rounded),
+                        decoration: InputDecoration(
+                          labelText: l10n.loginIdLabel,
+                          prefixIcon: const Icon(Icons.person_outline_rounded),
                         ),
-                        validator: (String? v) {
-                          final String s = (v ?? '').trim();
-                          if (s.isEmpty) return 'E-posta gerekli';
-                          if (!authLooksLikeEmail(s)) {
-                            return 'Geçerli bir e-posta girin';
-                          }
-                          return null;
-                        },
+                        validator: (String? v) => authValidateLoginId(v, l10n),
                       ),
                       const SizedBox(height: 14),
                       TextFormField(
@@ -113,10 +93,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
-                          labelText: 'Şifre',
+                          labelText: l10n.passwordLabel,
                           prefixIcon: const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
-                            tooltip: _obscure ? 'Göster' : 'Gizle',
+                            tooltip:
+                                _obscure ? l10n.showPassword : l10n.hidePassword,
                             onPressed: () =>
                                 setState(() => _obscure = !_obscure),
                             icon: Icon(
@@ -129,14 +110,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         validator: (String? v) {
                           final String s = (v ?? '');
                           if (s.length < 6) {
-                            return 'En az 6 karakter';
+                            return l10n.passwordMinLength;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 26),
                       FilledButton(
-                        onPressed: (_busy || _googleBusy) ? null : _submit,
+                        onPressed: _busy ? null : _submit,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(54),
                           shape: RoundedRectangleBorder(
@@ -152,26 +133,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Giriş yap'),
-                      ),
-                      const AuthDividerOr(),
-                      GoogleSignInOutlinedButton(
-                        label: 'Google ile giriş yap',
-                        loading: _googleBusy,
-                        onPressed: (_busy || _googleBusy) ? null : _google,
+                            : Text(l10n.signInButton),
                       ),
                       const SizedBox(height: 22),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           Text(
-                            'Hesabınız yok mu?',
+                            l10n.noAccountQuestion,
                             style: tt.bodyMedium?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
                           TextButton(
-                            onPressed: (_busy || _googleBusy)
+                            onPressed: _busy
                                 ? null
                                 : () {
                                     Navigator.of(context).push(
@@ -181,14 +156,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     );
                                   },
-                            child: const Text('Kayıt olun'),
+                            child: Text(l10n.registerLink),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Şifre yalnızca giriş anında iletilir; Google ile '
-                        'giriş Firebase üzerinden doğrulanır.',
+                        l10n.loginFooterNote,
                         textAlign: TextAlign.center,
                         style: tt.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,

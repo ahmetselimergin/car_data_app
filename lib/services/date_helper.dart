@@ -2,23 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 enum ReminderStatus {
-  expired('Süresi Dolmuş'),
-  critical('Kritik'),
-  approaching('Yaklaşıyor'),
-  safe('Güvenli');
-
-  final String label;
-  const ReminderStatus(this.label);
+  expired,
+  critical,
+  approaching,
+  safe,
 }
 
 class DateHelper {
   DateHelper._();
 
-  static final DateFormat _dateFormatter = DateFormat('dd MMM yyyy', 'tr_TR');
+  static DateFormat dateFormatterFor(String localeTag) =>
+      DateFormat('dd MMM yyyy', localeTag);
+
   static final DateFormat _shortDateFormatter = DateFormat('dd/MM/yyyy');
 
-  /// Verilen tarih ile bugünün tarihi arasındaki gün farkı.
-  /// Pozitif değer: tarih ileride. Negatif: geçmiş.
   static int daysUntil(DateTime date) {
     final DateTime now = DateTime.now();
     final DateTime today = DateTime(now.year, now.month, now.day);
@@ -60,14 +57,8 @@ class DateHelper {
     }
   }
 
-  static String formatLong(DateTime date) => _dateFormatter.format(date);
-  static String formatShort(DateTime date) => _shortDateFormatter.format(date);
+  static String formatLong(DateTime date, String localeTag) =>
+      dateFormatterFor(localeTag).format(date);
 
-  static String humanizeRemaining(DateTime date) {
-    final int diff = daysUntil(date);
-    if (diff < 0) return '${diff.abs()} gün önce doldu';
-    if (diff == 0) return 'Bugün son gün';
-    if (diff == 1) return 'Yarın son gün';
-    return '$diff gün kaldı';
-  }
+  static String formatShort(DateTime date) => _shortDateFormatter.format(date);
 }

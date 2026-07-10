@@ -1,12 +1,19 @@
 part of 'package:car_data_app/screens/home_screen.dart';
 
-String _historyMaintenanceFlagsShort(Maintenance log) {
+String _historyMaintenanceFlagsShort(AppLocalizations l10n, Maintenance log) {
   final List<String> parts = <String>[];
-  if (log.resmiServis) parts.add('Resmi');
-  if (log.garantiKapsaminda) parts.add('Garanti');
-  if (log.faturaAlindi) parts.add('Fiş');
-  if (log.sigortaKarsiladi) parts.add('Sigorta');
+  if (log.resmiServis) parts.add(l10n.flagOfficialShort);
+  if (log.garantiKapsaminda) parts.add(l10n.flagWarrantyShort);
+  if (log.faturaAlindi) parts.add(l10n.flagReceiptShort);
+  if (log.sigortaKarsiladi) parts.add(l10n.flagInsuranceShort);
   return parts.join(' · ');
+}
+
+String _historyTimeAgo(AppLocalizations l10n, int days) {
+  if (days == 0) return l10n.today;
+  if (days < 7) return l10n.daysAgo(days);
+  if (days < 30) return l10n.weeksAgo((days / 7).floor());
+  return l10n.monthsAgo((days / 30).floor());
 }
 
 class _HistoryTile extends StatelessWidget {
@@ -16,14 +23,11 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final String localeTag =
+        localeTagFor(Localizations.localeOf(context));
     final int days = DateTime.now().difference(log.tarih).inDays;
-    final String timeAgo = days == 0
-        ? 'Bugün'
-        : days < 7
-            ? '$days gün önce'
-            : days < 30
-                ? '${(days / 7).floor()} hafta önce'
-                : '${(days / 30).floor()} ay önce';
+    final String timeAgo = _historyTimeAgo(l10n, days);
 
     final Color vivid = GarageCardTheming.vividForeground(accent, context);
     return Container(
@@ -61,7 +65,12 @@ class _HistoryTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  '$timeAgo • ${log.km} km',
+                  '$timeAgo • ${DistanceFormat.format(
+                    log.km,
+                    unit: DistanceUnitController.instance.value,
+                    localeTag: localeTag,
+                    l10n: l10n,
+                  )}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color:
                             GarageCardTheming.supportiveLabel(context, accent),
@@ -71,7 +80,7 @@ class _HistoryTile extends StatelessWidget {
                 if (log.hasDetailFlags) ...<Widget>[
                   const SizedBox(height: 4),
                   Text(
-                    _historyMaintenanceFlagsShort(log),
+                    _historyMaintenanceFlagsShort(l10n, log),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -100,7 +109,7 @@ class _HistoryTile extends StatelessWidget {
             children: <Widget>[
               Text(
                 NumberFormat.currency(
-                  locale: 'tr_TR',
+                  locale: localeTag,
                   symbol: '₺',
                   decimalDigits: 2,
                 ).format(log.maliyet),

@@ -1,77 +1,113 @@
-# car_data_app
+# car_data_app (Garaj / CarDEX)
 
-Flutter ile geliştirilmiş araç verisi uygulaması.
+Türkiye odaklı araç garajı yönetimi. Monorepo yapısı:
+
+| Klasör | Ne işe yarar |
+| --- | --- |
+| `lib/` | Flutter mobil uygulama (Garaj) — iOS / Android |
+| `admin_desktop/` | Flutter macOS admin paneli (`.dmg`) — Supabase |
+| `supabase/` | Admin katalog şeması + seed |
+
+---
 
 ## Gereksinimler
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (Dart SDK `^3.11.5` ile uyumlu sürüm)
-- **Android:** Android Studio veya en azından Android SDK + emülatör / fiziksel cihaz (USB hata ayıklama açık)
-- **iOS (yalnızca macOS):** Xcode ve CocoaPods (`sudo gem install cocoapods` gerekirse)
-- **Web / masaüstü:** İlgili platform için Flutter kurulumunda belirtilen ek araçlar
+| Bileşen | Gereksinim |
+| --- | --- |
+| Mobil | [Flutter SDK](https://docs.flutter.dev/get-started/install) (Dart `^3.11.5`) |
+| Android | Android SDK + emülatör veya fiziksel cihaz |
+| iOS (geliştirme macOS) | Xcode + CocoaPods |
+| Admin masaüstü | Flutter + Xcode (macOS) + Supabase projesi |
 
-Kurulumun tamam olduğunu kontrol etmek için:
+Kurulumu doğrulamak için (repo kökünde):
 
 ```bash
 flutter doctor -v
 ```
 
-## Projeyi çalıştırma
+---
 
-Proje kök dizinine geçin (`car_data_app`).
+## Mobil uygulama (Flutter)
 
-### 1. Bağımlılıkları yükle
+Tüm komutlar **repo kökünde** (`car_data_app/`) çalıştırılır.
 
-```bash
-flutter pub get
-```
+### Kurulum ve çalıştırma
 
-### 2. Bağlı cihazları listele
-
-```bash
-flutter devices
-```
-
-Görünen bir cihaz/emülatör seçerek çalıştırabilir veya tek cihaz varsa doğrudan `flutter run` yeterlidir.
-
-### 3. Uygulamayı çalıştır
-
-```bash
-flutter run
-```
-
-Belirli bir cihazda çalıştırmak için (cihaz kimliği `flutter devices` çıktısındaki gibi):
-
-```bash
-flutter run -d <cihaz_kimliği>
-```
-
-Örnekler:
-
-```bash
-flutter run -d chrome          # Web (Chrome)
-flutter run -d macos             # macOS masaüstü
-```
-
-### Yayın (release) modunda çalıştırma
-
-```bash
-flutter run --release
-```
-
-## Diğer yararlı komutlar
-
-| Komut | Açıklama |
+| Ne yapmak istiyorsun? | Komut |
 | --- | --- |
-| `flutter analyze` | Statik analiz |
-| `flutter test` | Testleri çalıştırır |
-| `flutter build apk` | Android APK üretir |
-| `flutter build appbundle` | Google Play için AAB üretir |
-| `flutter build ios` | iOS derlemesi (macOS + Xcode) |
+| Paketleri yükle | `flutter pub get` |
+| Paketleri güncelle | `flutter pub upgrade` |
+| Bağlı cihazları listele | `flutter devices` |
+| Uygulamayı çalıştır (varsayılan cihaz) | `flutter run` |
+| Belirli cihazda çalıştır | `flutter run -d <cihaz_kimliği>` |
+| Android emülatörde çalıştır | `flutter run -d <android_id>` |
+| iOS simülatörde çalıştır | `flutter run -d <ios_id>` |
+| Release modunda çalıştır | `flutter run --release` |
+
+### Geliştirme ve kalite
+
+| Ne yapmak istiyorsun? | Komut |
+| --- | --- |
+| Statik analiz | `flutter analyze` |
+| Testleri çalıştır | `flutter test` |
+| Derleme önbelleğini temizle | `flutter clean` |
+| Temiz kurulum (clean + paketler) | `flutter clean && flutter pub get` |
+
+### Yayın derlemesi
+
+| Ne yapmak istiyorsun? | Komut |
+| --- | --- |
+| Android APK üret | `flutter build apk` |
+| Google Play AAB üret | `flutter build appbundle` |
+| iOS derlemesi (macOS + Xcode) | `flutter build ios` |
+
+---
+
+## Admin masaüstü (macOS)
+
+Komutlar `admin_desktop/` klasöründe. Giriş ve katalog: **Supabase Auth + Postgres**.
+
+| Ne yapmak istiyorsun? | Komut |
+| --- | --- |
+| Ortam dosyasını oluştur | `cp .env.example .env` |
+| Paketleri yükle | `flutter pub get` |
+| macOS’ta çalıştır | `flutter run -d macos` |
+| `.dmg` üret | `./scripts/build_dmg.sh` |
+
+Ayrıntı: [`admin_desktop/README.md`](admin_desktop/README.md) · şema: [`supabase/README.md`](supabase/README.md).
+
+---
+
+## Hızlı başlangıç
+
+```bash
+# 1) Mobil
+cp .env.example .env   # SUPABASE_URL + ANON_KEY
+flutter pub get
+flutter run
+
+# 2) Admin (ayrı terminal)
+cd admin_desktop && cp .env.example .env
+flutter pub get && flutter run -d macos
+```
+
+---
 
 ## Sorun giderme
 
-- **Cihaz görünmüyor:** Emülatörü açın veya USB kablosunu / geliştirici seçeneklerini kontrol edin; `adb devices` (Android) ile doğrulayın.
-- **iOS pod hataları:** `cd ios && pod install && cd ..` ardından tekrar `flutter run`.
-- **Bağımlılık uyumsuzluğu:** `flutter clean` sonra `flutter pub get`.
+| Sorun | Çözüm |
+| --- | --- |
+| Cihaz görünmüyor | Emülatörü açın; Android için `adb devices` ile kontrol edin |
+| iOS pod hatası | `cd ios && pod install && cd ..` sonra tekrar `flutter run` |
+| Paket uyumsuzluğu | `flutter clean && flutter pub get` |
+| Admin giriş başarısız | Supabase Auth’ta kullanıcı var mı / e-posta onaylı mı kontrol edin |
+| Mobil kayıt sonrası giriş yok | Auth → Email → Confirm email kapalı mı (dev) veya e-postayı onaylayın |
 
-Daha fazla bilgi: [Flutter dokümantasyonu](https://docs.flutter.dev/).
+---
+
+## İlgili dokümanlar
+
+- [Flutter dokümantasyonu](https://docs.flutter.dev/)
+- `supabase/README.md` — migration ve seed
+- `admin_desktop/README.md` — masaüstü admin
+- `CLAUDE.md` — proje özeti

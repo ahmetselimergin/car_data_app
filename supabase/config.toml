@@ -1,0 +1,5 @@
+# Minimal config for Edge Functions deploy.
+# Project ref: supabase link --project-ref <ref>
+
+[functions.admin-users]
+verify_jwt = true

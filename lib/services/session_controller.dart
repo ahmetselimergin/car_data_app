@@ -1,21 +1,27 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'google_auth_service.dart';
+import '../l10n/app_localizations.dart';
+import 'locale_controller.dart';
 
-/// Oturum özeti (Ayarlar vb.). Kaynak: [FirebaseAuth].
+/// Oturum özeti (Ayarlar vb.). Kaynak: Supabase Auth.
 @immutable
 class Session {
   const Session({
     required this.email,
     this.displayName,
+    this.username,
+    this.userId,
   });
 
   final String email;
   final String? displayName;
+  final String? username;
+  final String? userId;
 
   String get greetingName {
+    final String? u = username?.trim();
+    if (u != null && u.isNotEmpty) return u;
     final String? n = displayName?.trim();
     if (n != null && n.isNotEmpty) return n;
     final int at = email.indexOf('@');
@@ -23,95 +29,115 @@ class Session {
     return email;
   }
 
-  factory Session.fromFirebaseUser(User user) {
+  factory Session.fromUser(User user) {
+    final meta = user.userMetadata;
+    final String? name = meta?['display_name'] as String? ??
+        meta?['full_name'] as String? ??
+        meta?['name'] as String?;
+    final String? username = meta?['username'] as String?;
     return Session(
-      email: user.email ?? user.uid,
-      displayName: user.displayName,
+      email: user.email ?? user.id,
+      displayName: name,
+      username: username,
+      userId: user.id,
     );
   }
 }
 
-/// [FirebaseAuth] ile senkron; [syncFromFirebaseUser] ile güncellenir.
+/// Supabase Auth ile senkron.
 class SessionController extends ValueNotifier<Session?> {
   SessionController._() : super(null);
 
   static final SessionController instance = SessionController._();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  GoTrueClient get _auth => Supabase.instance.client.auth;
+  SupabaseClient get _client => Supabase.instance.client;
 
-  void syncFromFirebaseUser(User? user) {
+  static final RegExp usernamePattern = RegExp(r'^[a-z0-9_]{3,32}$');
+
+  void syncFromUser(User? user) {
     if (user == null) {
       value = null;
       return;
     }
-    value = Session.fromFirebaseUser(user);
+    value = Session.fromUser(user);
+  }
+
+  /// E-posta veya kullanıcı adını e-postaya çevirir.
+  Future<String> resolveEmail(String identifier) async {
+    final String raw = identifier.trim();
+    if (raw.isEmpty) {
+      throw AuthException(
+        lookupAppLocalizations(LocaleController.resolve(null)).emailRequired,
+      );
+    }
+    if (raw.contains('@')) return raw.toLowerCase();
+
+    final dynamic res = await _client.rpc(
+      'resolve_login_email',
+      params: <String, dynamic>{'identifier': raw},
+    );
+    final String? email = res is String ? res : res?.toString();
+    if (email == null || email.isEmpty || email == 'null') {
+      throw AuthException(
+        lookupAppLocalizations(LocaleController.resolve(null)).authUserNotFound,
+      );
+    }
+    return email;
   }
 
   Future<void> signIn({
-    required String email,
+    required String emailOrUsername,
     required String password,
   }) async {
-    await _auth.signInWithEmailAndPassword(
-      email: email.trim(),
+    final String email = await resolveEmail(emailOrUsername);
+    final res = await _auth.signInWithPassword(
+      email: email,
       password: password,
     );
+    syncFromUser(res.user);
   }
 
   Future<void> register({
     required String email,
     required String password,
     required String confirmPassword,
+    required String username,
     String? displayName,
   }) async {
+    final AppLocalizations l10n =
+        lookupAppLocalizations(LocaleController.resolve(null));
     if (password != confirmPassword) {
-      throw ArgumentError('Şifreler eşleşmiyor');
+      throw ArgumentError(l10n.passwordsDoNotMatch);
     }
-    final UserCredential cred = await _auth.createUserWithEmailAndPassword(
+    final String uname = username.trim().toLowerCase();
+    if (!usernamePattern.hasMatch(uname)) {
+      throw AuthException(l10n.usernameInvalid);
+    }
+    final dynamic available = await _client.rpc(
+      'username_available',
+      params: <String, dynamic>{'u': uname},
+    );
+    if (available != true) {
+      throw AuthException(l10n.usernameTaken);
+    }
+
+    final String? name = displayName?.trim();
+    final res = await _auth.signUp(
       email: email.trim(),
       password: password,
+      data: <String, dynamic>{
+        'username': uname,
+        if (name != null && name.isNotEmpty) 'display_name': name,
+      },
     );
-    final String? name = displayName?.trim();
-    if (name != null && name.isNotEmpty && cred.user != null) {
-      await cred.user!.updateDisplayName(name);
-      await cred.user!.reload();
-      syncFromFirebaseUser(_auth.currentUser);
+    if (res.session == null && res.user != null) {
+      throw AuthException(l10n.authEmailConfirmationRequired);
     }
-  }
-
-  /// Google hesabı ile Firebase oturumu ([GoogleAuthProvider]).
-  Future<void> signInWithGoogle() async {
-    if (!GoogleAuthService.isReady) {
-      await GoogleAuthService.initialize();
-    }
-    if (!GoogleAuthService.isReady) {
-      throw GoogleSignInNotConfigured(
-        'Google ile giriş kullanılamıyor. google-services.json / '
-        'GoogleService-Info.plist ve OAuth yapılandırmasını kontrol edin.',
-      );
-    }
-    if (!GoogleSignIn.instance.supportsAuthenticate()) {
-      throw UnsupportedError('Bu ortamda Google ile giriş desteklenmiyor.');
-    }
-    final GoogleSignInAccount account =
-        await GoogleSignIn.instance.authenticate(
-      scopeHint: <String>['email', 'profile'],
-    );
-    final GoogleSignInAuthentication ga = account.authentication;
-    final String? idToken = ga.idToken;
-    if (idToken == null || idToken.isEmpty) {
-      throw FirebaseAuthException(
-        code: 'google-no-id-token',
-        message: 'Google kimlik jetonu alınamadı.',
-      );
-    }
-    final OAuthCredential credential = GoogleAuthProvider.credential(
-      idToken: idToken,
-    );
-    await _auth.signInWithCredential(credential);
+    syncFromUser(res.user ?? _auth.currentUser);
   }
 
   Future<void> signOut() async {
-    await GoogleAuthService.signOut();
     await _auth.signOut();
     value = null;
   }

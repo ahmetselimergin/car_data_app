@@ -20,13 +20,18 @@ class _CarHeaderCard extends StatelessWidget {
   final List<Maintenance> logs;
   final VoidCallback onEdit;
 
-  String get _totalKmText {
+  String _totalDistanceText(String localeTag, AppLocalizations l10n) {
     final int fromCar = car.km;
     final int fromLogs = logs.isEmpty
         ? 0
         : logs.map((Maintenance e) => e.km).reduce(math.max);
     final int v = math.max(fromCar, fromLogs);
-    return NumberFormat.decimalPattern('tr_TR').format(v);
+    return DistanceFormat.format(
+      v,
+      unit: DistanceUnitController.instance.value,
+      localeTag: localeTag,
+      l10n: l10n,
+    );
   }
 
   String get _transmissionLabel => car.transmission?.trim().isNotEmpty == true
@@ -44,6 +49,10 @@ class _CarHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String localeTag =
+        localeTagFor(Localizations.localeOf(context));
+    final AppLocalizations l10n = context.l10n;
+    final String totalDistanceText = _totalDistanceText(localeTag, l10n);
     final Color accent =
         CarCardPalette.resolve(argbValue: car.cardColor, seed: car.id);
     final Color bottomColor = Color.lerp(accent, Colors.white, 0.40)!;
@@ -202,7 +211,7 @@ class _CarHeaderCard extends StatelessWidget {
                                       children: <Widget>[
                                         _HeroSpecRow(
                                           icon: Icons.map_outlined,
-                                          label: '$_totalKmText km',
+                                          label: totalDistanceText,
                                           gap: gap,
                                           iconSize: iconSz,
                                           fontSize: fontSz,

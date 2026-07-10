@@ -10,38 +10,68 @@ class _CarStatsStrip extends StatelessWidget {
   final List<Maintenance> logs;
   final Color accent;
 
-  String get _avgCostText {
-    if (logs.isEmpty) return '—';
+  ({String text, bool isPlaceholder}) _avgCost(String localeTag) {
+    final NumberFormat currencyFormat = NumberFormat.currency(
+      locale: localeTag,
+      symbol: '₺',
+      decimalDigits: 0,
+    );
+    if (logs.isEmpty) {
+      return (text: currencyFormat.format(0), isPlaceholder: true);
+    }
     final double avg = logs
             .map((Maintenance e) => e.maliyet)
             .reduce((double a, double b) => a + b) /
         logs.length;
-    return NumberFormat.compactCurrency(
-            locale: 'tr_TR', symbol: '₺', decimalDigits: 0)
-        .format(avg);
+    return (
+      text: NumberFormat.compactCurrency(
+        locale: localeTag,
+        symbol: '₺',
+        decimalDigits: 0,
+      ).format(avg),
+      isPlaceholder: false,
+    );
   }
 
-  String get _lastServiceText {
-    if (logs.isEmpty) return '—';
+  ({String text, bool isPlaceholder}) _lastService(AppLocalizations l10n) {
+    if (logs.isEmpty) {
+      return (text: '—', isPlaceholder: true);
+    }
     final DateTime last = logs
         .map((Maintenance e) => e.tarih)
         .reduce((DateTime a, DateTime b) => a.isAfter(b) ? a : b);
     final int days = DateTime.now().difference(last).inDays;
-    if (days == 0) return 'Bugün';
-    if (days < 30) return '$days gün';
-    if (days < 365) return '${(days / 30).floor()} ay';
-    return '${(days / 365).floor()} yıl';
+    if (days == 0) return (text: l10n.today, isPlaceholder: false);
+    if (days < 30) return (text: l10n.daysCount(days), isPlaceholder: false);
+    if (days < 365) {
+      return (
+        text: l10n.monthsCount((days / 30).floor()),
+        isPlaceholder: false,
+      );
+    }
+    return (
+      text: l10n.yearsCount((days / 365).floor()),
+      isPlaceholder: false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final String localeTag =
+        localeTagFor(Localizations.localeOf(context));
+    final ({String text, bool isPlaceholder}) cost = _avgCost(localeTag);
+    final ({String text, bool isPlaceholder}) lastService = _lastService(l10n);
+    final bool totalEmpty = logs.isEmpty;
+
     return Row(
       children: <Widget>[
         Expanded(
           child: _StatTile(
             icon: Icons.payments_outlined,
-            label: 'Bakım Maliyeti',
-            value: _avgCostText,
+            label: l10n.statMaintenanceCost,
+            value: cost.text,
+            isPlaceholder: cost.isPlaceholder,
             accent: accent,
           ),
         ),
@@ -49,8 +79,9 @@ class _CarStatsStrip extends StatelessWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.schedule_outlined,
-            label: 'Son Servis',
-            value: _lastServiceText,
+            label: l10n.statLastService,
+            value: lastService.text,
+            isPlaceholder: lastService.isPlaceholder,
             accent: accent,
           ),
         ),
@@ -58,8 +89,9 @@ class _CarStatsStrip extends StatelessWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.build_outlined,
-            label: 'Toplam',
+            label: l10n.statTotal,
             value: '${logs.length}',
+            isPlaceholder: totalEmpty,
             accent: accent,
           ),
         ),
@@ -73,19 +105,31 @@ class _StatTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.isPlaceholder,
     required this.accent,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final bool isPlaceholder;
   final Color accent;
 
   @override
   Widget build(BuildContext context) {
+    final bool dark = Theme.of(context).brightness == Brightness.dark;
     final Color vivid = GarageCardTheming.vividForeground(accent, context);
+    final Color valueColor = isPlaceholder
+        ? vivid.withValues(alpha: dark ? 0.38 : 0.42)
+        : dark
+            ? Colors.white.withValues(alpha: 0.96)
+            : Theme.of(context).colorScheme.onSurface;
+    final Color iconColor =
+        isPlaceholder ? vivid.withValues(alpha: 0.55) : vivid;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      constraints: const BoxConstraints(minHeight: 96),
+      padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
       decoration: GarageCardTheming.garageCardDecoration(
         context,
         accent,
@@ -93,28 +137,32 @@ class _StatTile extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Icon(icon, color: vivid, size: 20),
-          const SizedBox(height: 8),
+          Icon(icon, color: iconColor, size: 22),
+          const Spacer(),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontWeight: FontWeight.w900,
-              fontSize: 16,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withValues(alpha: 0.96)
-                  : null,
+              fontSize: 22,
+              height: 1.1,
+              letterSpacing: -0.3,
+              color: valueColor,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: GarageCardTheming.supportiveLabel(context, accent),
-              fontSize: 11,
+              fontSize: 11.5,
               fontWeight: FontWeight.w700,
+              height: 1.2,
             ),
           ),
         ],

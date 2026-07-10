@@ -7,10 +7,12 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<_NavItem> items = const <_NavItem>[
-      _NavItem(icon: Icons.directions_car_outlined, label: 'Araçlarım'),
-      _NavItem(icon: Icons.notifications_none_rounded, label: 'Hatırlatıcılar'),
-      _NavItem(icon: Icons.settings_outlined, label: 'Ayarlar'),
+    final AppLocalizations l10n = context.l10n;
+    final List<({IconData icon, String label})> items =
+        <({IconData icon, String label})>[
+      (icon: Icons.directions_car_outlined, label: l10n.navMyCars),
+      (icon: Icons.notifications_none_rounded, label: l10n.navReminders),
+      (icon: Icons.settings_outlined, label: l10n.navSettings),
     ];
 
     final AppTokens tokens = context.tokens;
@@ -43,9 +45,7 @@ class _BottomNav extends StatelessWidget {
         child: Row(
           children: List<Widget>.generate(items.length, (int i) {
             final bool selected = i == index;
-            final _NavItem item = items[i];
-            // Seçili sekme ikon + etiket gösterdiği için daha geniş pay verilir;
-            // aksi halde "Hatırlatıcılar" gibi uzun metinler kesilir.
+            final ({IconData icon, String label}) item = items[i];
             return Expanded(
               flex: selected ? 2 : 1,
               child: InkWell(
@@ -97,10 +97,4 @@ class _BottomNav extends StatelessWidget {
       ),
     );
   }
-}
-
-class _NavItem {
-  const _NavItem({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
 }

@@ -1,10 +1,13 @@
 import 'dart:convert';
 
+import '../l10n/l10n_ext.dart';
+
 /// Önceden tanımlı bakım kalemleri (checkbox listesi); `id` veritabanında saklanır.
 class MaintenanceItemCatalog {
   MaintenanceItemCatalog._();
 
-  static const List<(String id, String label)> entries = <(String, String)>[
+  static const List<(String id, String legacyLabel)> entries =
+      <(String, String)>[
     ('yag_degisimi', 'Yağ değişimi'),
     ('yag_filtresi', 'Yağ filtresi'),
     ('hava_filtresi', 'Hava filtresi'),
@@ -32,30 +35,18 @@ class MaintenanceItemCatalog {
     ('genel_kontrol', 'Genel kontrol'),
   ];
 
-  static String? labelForId(String id) {
-    for (final (String i, String l) in entries) {
-      if (i == id) return l;
-    }
-    return null;
-  }
+  static String labelForId(AppLocalizations l10n, String id) =>
+      maintenanceItemLabel(l10n, id);
 
-  /// Katalog sırasına göre etiketler; bilinmeyen id'ler sonda eklenir.
-  static List<String> labelsInCatalogOrder(Iterable<String> ids) {
-    final Set<String> remaining = ids.toSet();
-    final List<String> ordered = <String>[];
-    for (final (String id, String label) in entries) {
-      if (remaining.remove(id)) ordered.add(label);
-    }
-    for (final String id in remaining) {
-      ordered.add(labelForId(id) ?? id);
-    }
-    return ordered;
-  }
+  static List<String> labelsInCatalogOrder(
+    AppLocalizations l10n,
+    Iterable<String> ids,
+  ) =>
+      maintenanceLabelsInCatalogOrder(l10n, ids);
 
-  static String joinLabels(Iterable<String> ids) =>
-      labelsInCatalogOrder(ids).join(', ');
+  static String joinLabels(AppLocalizations l10n, Iterable<String> ids) =>
+      labelsInCatalogOrder(l10n, ids).join(', ');
 
-  /// Kayıt için id sırası (katalog sırası + bilinmeyenler).
   static List<String> idsInCatalogOrder(Set<String> ids) {
     final Set<String> remaining = Set<String>.from(ids);
     final List<String> ordered = <String>[];

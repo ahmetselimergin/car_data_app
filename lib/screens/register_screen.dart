@@ -1,9 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../services/auth_firebase_messages.dart';
+import '../l10n/l10n_ext.dart';
 import '../services/session_controller.dart';
-import 'auth_google_flow.dart';
 import 'auth_widgets.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -15,6 +14,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _username = TextEditingController();
   final TextEditingController _displayName = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
@@ -22,10 +22,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscure = true;
   bool _obscure2 = true;
   bool _busy = false;
-  bool _googleBusy = false;
 
   @override
   void dispose() {
+    _username.dispose();
     _displayName.dispose();
     _email.dispose();
     _password.dispose();
@@ -41,21 +41,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _email.text,
         password: _password.text,
         confirmPassword: _confirm.text,
+        username: _username.text,
         displayName: _displayName.text.trim().isEmpty
             ? null
             : _displayName.text.trim(),
       );
       if (mounted) Navigator.of(context).pop();
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(firebaseAuthMessage(e))),
+          SnackBar(content: Text(authErrorMessage(e, context.l10n))),
         );
       }
-    } on ArgumentError catch (e) {
+    } on ArgumentError {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
+          SnackBar(content: Text(context.l10n.passwordsDoNotMatch)),
         );
       }
     } finally {
@@ -63,36 +64,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _google() async {
-    setState(() => _googleBusy = true);
-    try {
-      await tryEstablishSessionWithGoogle(context);
-      if (mounted && FirebaseAuth.instance.currentUser != null) {
-        Navigator.of(context).pop();
-      }
-    } finally {
-      if (mounted) setState(() => _googleBusy = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final TextTheme tt = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kayıt ol'),
+        title: Text(l10n.registerAppBarTitle),
       ),
       body: SafeArea(
         child: CustomScrollView(
           slivers: <Widget>[
             SliverToBoxAdapter(
               child: AuthBrandingHeader(
-                title: 'Hesap oluştur',
-                subtitle:
-                    'Kayıt Firebase ile oluşturulur. Adınızı isteğe bağlı '
-                    'olarak profilde gösterebilirsiniz.',
+                title: l10n.registerTitle,
+                subtitle: l10n.registerSubtitle,
               ),
             ),
             SliverPadding(
@@ -104,12 +92,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       TextFormField(
+                        controller: _username,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const <String>[AutofillHints.username],
+                        decoration: InputDecoration(
+                          labelText: l10n.usernameLabel,
+                          prefixIcon: const Icon(Icons.alternate_email_rounded),
+                          helperText: l10n.usernameInvalid,
+                        ),
+                        validator: (String? v) {
+                          final String s = (v ?? '').trim().toLowerCase();
+                          if (s.isEmpty) return l10n.usernameRequired;
+                          if (!authLooksLikeUsername(s)) {
+                            return l10n.usernameInvalid;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
                         controller: _displayName,
                         textCapitalization: TextCapitalization.words,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Ad Soyad (isteğe bağlı)',
-                          prefixIcon: Icon(Icons.person_outline_rounded),
+                        decoration: InputDecoration(
+                          labelText: l10n.displayNameLabel,
+                          prefixIcon: const Icon(Icons.person_outline_rounded),
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -120,15 +127,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           AutofillHints.email,
                         ],
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'E-posta',
-                          prefixIcon: Icon(Icons.mail_outline_rounded),
+                        decoration: InputDecoration(
+                          labelText: l10n.emailLabel,
+                          prefixIcon: const Icon(Icons.mail_outline_rounded),
                         ),
                         validator: (String? v) {
                           final String s = (v ?? '').trim();
-                          if (s.isEmpty) return 'E-posta gerekli';
+                          if (s.isEmpty) return l10n.emailRequired;
                           if (!authLooksLikeEmail(s)) {
-                            return 'Geçerli bir e-posta girin';
+                            return l10n.emailInvalid;
                           }
                           return null;
                         },
@@ -139,10 +146,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         obscureText: _obscure,
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
-                          labelText: 'Şifre',
+                          labelText: l10n.passwordLabel,
                           prefixIcon: const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
-                            tooltip: _obscure ? 'Göster' : 'Gizle',
+                            tooltip:
+                                _obscure ? l10n.showPassword : l10n.hidePassword,
                             onPressed: () =>
                                 setState(() => _obscure = !_obscure),
                             icon: Icon(
@@ -154,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         validator: (String? v) {
                           final String s = (v ?? '');
-                          if (s.length < 6) return 'En az 6 karakter';
+                          if (s.length < 6) return l10n.passwordMinLength;
                           return null;
                         },
                       ),
@@ -165,11 +173,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
-                          labelText: 'Şifre tekrar',
+                          labelText: l10n.confirmPasswordLabel,
                           prefixIcon:
                               const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
-                            tooltip: _obscure2 ? 'Göster' : 'Gizle',
+                            tooltip: _obscure2
+                                ? l10n.showPassword
+                                : l10n.hidePassword,
                             onPressed: () =>
                                 setState(() => _obscure2 = !_obscure2),
                             icon: Icon(
@@ -181,14 +191,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         validator: (String? v) {
                           if ((v ?? '') != _password.text) {
-                            return 'Şifreler eşleşmiyor';
+                            return l10n.passwordsDoNotMatch;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 26),
                       FilledButton(
-                        onPressed: (_busy || _googleBusy) ? null : _submit,
+                        onPressed: _busy ? null : _submit,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(54),
                           shape: RoundedRectangleBorder(
@@ -204,25 +214,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Kayıt ol'),
-                      ),
-                      const AuthDividerOr(),
-                      GoogleSignInOutlinedButton(
-                        label: 'Google ile kayıt ol',
-                        loading: _googleBusy,
-                        onPressed: (_busy || _googleBusy) ? null : _google,
+                            : Text(l10n.registerButton),
                       ),
                       const SizedBox(height: 16),
                       TextButton(
-                        onPressed: (_busy || _googleBusy)
-                            ? null
-                            : () => Navigator.of(context).pop(),
-                        child: const Text('Zaten hesabım var — giriş'),
+                        onPressed:
+                            _busy ? null : () => Navigator.of(context).pop(),
+                        child: Text(l10n.alreadyHaveAccountSignIn),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Kayıt şifresi yalnızca doğrulama için kullanılır, '
-                        'cihaza yazılmaz.',
+                        l10n.registerFooterNote,
                         textAlign: TextAlign.center,
                         style: tt.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,

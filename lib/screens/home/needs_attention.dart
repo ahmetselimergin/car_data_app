@@ -13,13 +13,14 @@ class _NeedsAttentionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     if (reminders.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: _MutedTile(
           icon: Icons.check_circle_outline,
-          title: 'Hepsi güncel',
-          subtitle: 'Bu araç için yaklaşan bir hatırlatıcı yok.',
+          title: l10n.allUpToDate,
+          subtitle: l10n.noUpcomingReminders,
           accent: accent,
           trailing: TextButton.icon(
             onPressed: () {
@@ -33,7 +34,7 @@ class _NeedsAttentionList extends StatelessWidget {
                 Icons.add,
                 color: GarageCardTheming.vividForeground(accent, context)),
             label: Text(
-              'Ekle',
+              l10n.add,
               style: TextStyle(
                 color: GarageCardTheming.vividForeground(accent, context),
                 fontWeight: FontWeight.w700,
@@ -89,6 +90,7 @@ class _AttentionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final ReminderStatus status = DateHelper.statusFor(reminder.bitisTarihi);
     final int days = DateHelper.daysUntil(reminder.bitisTarihi);
     final Color statusColor = DateHelper.colorFor(status);
@@ -125,7 +127,7 @@ class _AttentionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Text(
-              reminder.tur.label,
+              reminder.tur.localizedLabel(l10n),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 10),
@@ -140,7 +142,7 @@ class _AttentionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              days < 0 ? 'Süresi doldu' : 'Bitişe kalan',
+              days < 0 ? l10n.expired : l10n.remainingUntilExpiry,
               style: TextStyle(
                 fontSize: 11,
                 color: days < 0
@@ -150,7 +152,7 @@ class _AttentionCard extends StatelessWidget {
               ),
             ),
             Text(
-              days < 0 ? '${days.abs()} gün önce' : '$days gün',
+              days < 0 ? l10n.daysAgo(days.abs()) : l10n.daysCount(days),
               style: TextStyle(
                 color: highlighted
                     ? statusColor

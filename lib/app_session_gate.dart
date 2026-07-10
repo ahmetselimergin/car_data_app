@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/session_controller.dart';
 
-/// Firebase oturumu yoksa [LoginScreen], varsa [HomeScreen].
+/// Supabase oturumu yoksa [LoginScreen], varsa [HomeScreen].
 class AppSessionGate extends StatefulWidget {
   const AppSessionGate({super.key});
 
@@ -17,21 +17,21 @@ class AppSessionGate extends StatefulWidget {
 
 class _AppSessionGateState extends State<AppSessionGate> {
   bool _ready = false;
-  StreamSubscription<User?>? _authSub;
+  StreamSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
     super.initState();
     SessionController.instance.addListener(_onSessionChanged);
-    _authSub = FirebaseAuth.instance.authStateChanges().listen(
-      SessionController.instance.syncFromFirebaseUser,
-    );
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      SessionController.instance.syncFromUser(data.session?.user);
+    });
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
     SessionController.instance
-        .syncFromFirebaseUser(FirebaseAuth.instance.currentUser);
+        .syncFromUser(Supabase.instance.client.auth.currentUser);
     if (mounted) setState(() => _ready = true);
   }
 
