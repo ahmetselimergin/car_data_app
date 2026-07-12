@@ -11,6 +11,19 @@ import '../theme/car_card_palette.dart';
 import '../widgets/undraw_empty_state.dart';
 import 'maintenance_screen.dart';
 
+IconData _iconForReminderType(ReminderType t) {
+  switch (t) {
+    case ReminderType.sigorta:
+      return Icons.shield_outlined;
+    case ReminderType.kasko:
+      return Icons.security_outlined;
+    case ReminderType.muayene:
+      return Icons.fact_check_outlined;
+    case ReminderType.egzoz:
+      return Icons.air;
+  }
+}
+
 class ReminderScreen extends StatefulWidget {
   const ReminderScreen({super.key, required this.car});
 
@@ -23,6 +36,7 @@ class ReminderScreen extends StatefulWidget {
 class _ReminderScreenState extends State<ReminderScreen> {
   final ReminderRepository _repo = SqliteReminderRepository();
   late Future<List<Reminder>> _future;
+  bool _didChange = false;
 
   @override
   void initState() {
@@ -35,25 +49,74 @@ class _ReminderScreenState extends State<ReminderScreen> {
 
   void _refresh() {
     if (!mounted) return;
+    _didChange = true;
     setState(() {
       _future = _load();
     });
   }
 
   Future<void> _addOrEditReminder({Reminder? existing}) async {
+    final List<Reminder> current = await _load();
+    final Set<ReminderType> taken = current
+        .where((Reminder r) => existing == null || r.id != existing.id)
+        .map((Reminder r) => r.tur)
+        .toSet();
+
+    if (existing == null && taken.length >= ReminderType.values.length) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.reminderAllTypesExist)),
+      );
+      return;
+    }
+
+    final List<ReminderType> available = existing != null
+        ? <ReminderType>[existing.tur]
+        : ReminderType.values
+            .where((ReminderType t) => !taken.contains(t))
+            .toList();
+
+    if (available.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.reminderAllTypesExist)),
+      );
+      return;
+    }
+
+    if (!mounted) return;
     final Reminder? saved = await showModalBottomSheet<Reminder>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
+      backgroundColor: const Color(0xFFF7F8FA),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (_) => _ReminderEditor(
         carId: widget.car.id!,
         existing: existing,
+        availableTypes: available,
       ),
     );
 
     if (saved == null) return;
 
     if (existing == null) {
+      final List<Reminder> latest = await _load();
+      if (latest.any((Reminder r) => r.tur == saved.tur)) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.reminderTypeAlreadyExists(
+                saved.tur.localizedLabel(context.l10n),
+              ),
+            ),
+          ),
+        );
+        return;
+      }
       final int id = await _repo.addReminder(saved);
       final Reminder withId = saved.copyWith(id: id);
       await NotificationService.instance.scheduleReminder(
@@ -62,7 +125,6 @@ class _ReminderScreenState extends State<ReminderScreen> {
       );
     } else {
       await _repo.updateReminder(saved);
-      await NotificationService.instance.cancelReminder(saved.id!);
       await NotificationService.instance.scheduleReminder(
         saved,
         carLabel: '${widget.car.marka} ${widget.car.model} (${widget.car.plaka})',
@@ -84,9 +146,19 @@ class _ReminderScreenState extends State<ReminderScreen> {
     final String localeTag =
         localeTagFor(Localizations.localeOf(context));
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) return;
+        Navigator.of(context).pop(_didChange);
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text('${widget.car.marka} ${widget.car.model}'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(_didChange),
+        ),
         actions: <Widget>[
           IconButton(
             tooltip: l10n.maintenanceLogTooltip,
@@ -161,13 +233,48 @@ class _ReminderScreenState extends State<ReminderScreen> {
                                 r.tur.localizedLabel(l10n),
                               ),
                             ),
+                            actionsPadding: const EdgeInsets.fromLTRB(
+                              16,
+                              0,
+                              16,
+                              16,
+                            ),
                             actions: <Widget>[
-                              TextButton(
-                                  onPressed: () => Navigator.pop(c, false),
-                                  child: Text(l10n.dismiss)),
-                              FilledButton(
-                                  onPressed: () => Navigator.pop(c, true),
-                                  child: Text(l10n.delete)),
+                              Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () =>
+                                          Navigator.pop(c, false),
+                                      icon: const Icon(
+                                        Icons.close_rounded,
+                                        size: 18,
+                                      ),
+                                      label: Text(l10n.dismiss),
+                                      style: OutlinedButton.styleFrom(
+                                        minimumSize:
+                                            const Size.fromHeight(48),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: FilledButton.icon(
+                                      onPressed: () =>
+                                          Navigator.pop(c, true),
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        size: 18,
+                                      ),
+                                      label: Text(l10n.delete),
+                                      style: FilledButton.styleFrom(
+                                        minimumSize:
+                                            const Size.fromHeight(48),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ) ??
@@ -208,15 +315,21 @@ class _ReminderScreenState extends State<ReminderScreen> {
           },
         ),
       ),
+      ),
     );
   }
 }
 
 class _ReminderEditor extends StatefulWidget {
-  const _ReminderEditor({required this.carId, this.existing});
+  const _ReminderEditor({
+    required this.carId,
+    required this.availableTypes,
+    this.existing,
+  });
 
   final int carId;
   final Reminder? existing;
+  final List<ReminderType> availableTypes;
 
   @override
   State<_ReminderEditor> createState() => _ReminderEditorState();
@@ -229,7 +342,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
   @override
   void initState() {
     super.initState();
-    _tur = widget.existing?.tur ?? ReminderType.sigorta;
+    _tur = widget.existing?.tur ?? widget.availableTypes.first;
     _date = widget.existing?.bitisTarihi;
   }
 
@@ -267,110 +380,274 @@ class _ReminderEditorState extends State<_ReminderEditor> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
-    final String localeTag =
-        localeTagFor(Localizations.localeOf(context));
+    final String localeTag = localeTagFor(Localizations.localeOf(context));
     final ReminderStatus? status =
         _date == null ? null : DateHelper.statusFor(_date!);
-    final Color? color =
+    final Color? statusColor =
         status == null ? null : DateHelper.colorFor(status);
+    final bool locked = widget.existing != null;
+    final bool isTr =
+        Localizations.localeOf(context).languageCode == 'tr';
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 8,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        left: 22,
+        right: 22,
+        top: 4,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(
-            widget.existing == null ? l10n.newReminder : l10n.editReminder,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ReminderType.values.map((ReminderType t) {
-              final bool selected = t == _tur;
-              return ChoiceChip(
-                label: Text(t.localizedLabel(l10n)),
-                selected: selected,
-                onSelected: (_) => setState(() => _tur = t),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-          InkWell(
-            onTap: _pickDate,
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Theme.of(context).dividerColor),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F4F5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  _iconForReminderType(_tur),
+                  color: const Color(0xFF18181B),
+                  size: 24,
+                ),
               ),
-              child: Row(
-                children: <Widget>[
-                  Icon(Icons.calendar_today_outlined,
-                      color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      widget.existing == null
+                          ? l10n.newReminder
+                          : l10n.editReminder,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        color: Color(0xFF18181B),
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _tur.localizedLabel(l10n),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black.withValues(alpha: 0.45),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          Text(
+            isTr ? 'Tür' : 'Type',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.black.withValues(alpha: 0.45),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: widget.availableTypes.map((ReminderType t) {
+              final bool selected = t == _tur;
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: locked ? null : () => setState(() => _tur = t),
+                  borderRadius: BorderRadius.circular(18),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    width: 104,
+                    height: 88,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: selected
+                            ? const Color(0xFF18181B)
+                            : const Color(0xFFE4E4E7),
+                        width: selected ? 1.75 : 1,
+                      ),
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Text(l10n.expiryDateLabel,
-                            style: const TextStyle(fontSize: 12)),
-                        const SizedBox(height: 2),
+                        Icon(
+                          _iconForReminderType(t),
+                          color: selected
+                              ? const Color(0xFF18181B)
+                              : const Color(0xFF71717A),
+                          size: 22,
+                        ),
+                        const SizedBox(height: 8),
                         Text(
-                          _date == null
-                              ? l10n.dateNotSelected
-                              : DateHelper.formatLong(_date!, localeTag),
+                          t.localizedLabel(l10n),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: _date == null
-                                ? Theme.of(context).hintColor
-                                : null,
+                            fontSize: 13,
+                            fontWeight:
+                                selected ? FontWeight.w800 : FontWeight.w600,
+                            color: selected
+                                ? const Color(0xFF18181B)
+                                : const Color(0xFF3F3F46),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (status != null)
-                    Icon(DateHelper.iconFor(status), color: color),
-                ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 22),
+          Text(
+            l10n.expiryDateLabel,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.black.withValues(alpha: 0.45),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _pickDate,
+              borderRadius: BorderRadius.circular(20),
+              child: Ink(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: statusColor?.withValues(alpha: 0.55) ??
+                        const Color(0xFFE4E4E7),
+                    width: status != null ? 1.5 : 1,
+                  ),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F4F5),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_month_rounded,
+                        color: Color(0xFF18181B),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            l10n.expiryDateLabel,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            _date == null
+                                ? l10n.dateNotSelected
+                                : DateHelper.formatLong(_date!, localeTag),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: _date == null
+                                  ? const Color(0xFFA1A1AA)
+                                  : const Color(0xFF18181B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.black.withValues(alpha: 0.28),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          if (status != null && color != null)
-            Row(
-              children: <Widget>[
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                      color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${status.localizedLabel(l10n)} • ${humanizeRemaining(l10n, _date!)}',
-                  style:
-                      TextStyle(color: color, fontWeight: FontWeight.w600),
-                ),
-              ],
+          if (status != null && statusColor != null) ...<Widget>[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: <Widget>[
+                  Icon(DateHelper.iconFor(status), color: statusColor, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${status.localizedLabel(l10n)} · ${humanizeRemaining(l10n, _date!)}',
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _submit,
-            icon: const Icon(Icons.save_outlined),
-            label: Text(l10n.saveButton),
+          ],
+          const SizedBox(height: 26),
+          SizedBox(
+            height: 54,
+            child: FilledButton(
+              onPressed: _submit,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF18181B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              child: Text(
+                l10n.saveButton,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
           ),
         ],
       ),

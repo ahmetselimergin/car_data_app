@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Garage'**
+  /// **'MyGaraj'**
   String get appTitle;
 
   /// No description provided for @navMyCars.
@@ -283,7 +283,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'A notification is sent 7 days before the reminder date.'**
+  /// **'Notifications are sent 15, 7, and 1 day before the reminder.'**
   String get notificationsSubtitle;
 
   /// No description provided for @versionLabel.
@@ -321,6 +321,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maintenance history'**
   String get maintenanceHistory;
+
+  /// No description provided for @maintenanceHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View all service work performed'**
+  String get maintenanceHistorySubtitle;
 
   /// No description provided for @seeAll.
   ///
@@ -397,13 +403,13 @@ abstract class AppLocalizations {
   /// No description provided for @allUpToDate.
   ///
   /// In en, this message translates to:
-  /// **'All up to date'**
+  /// **'Reminders'**
   String get allUpToDate;
 
   /// No description provided for @noUpcomingReminders.
   ///
   /// In en, this message translates to:
-  /// **'No upcoming reminders for this vehicle.'**
+  /// **'No upcoming reminders'**
   String get noUpcomingReminders;
 
   /// No description provided for @add.
@@ -411,6 +417,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get add;
+
+  /// No description provided for @addNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new'**
+  String get addNew;
 
   /// No description provided for @expired.
   ///
@@ -484,6 +496,36 @@ abstract class AppLocalizations {
   /// **'Error: {error}'**
   String genericError(String error);
 
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your garage, all in one place'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track maintenance, mileage and reminders for every car you own.'**
+  String get welcomeSubtitle;
+
+  /// No description provided for @welcomeGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get welcomeGetStarted;
+
+  /// No description provided for @welcomeSwipeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to enter'**
+  String get welcomeSwipeHint;
+
+  /// No description provided for @welcomeCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account'**
+  String get welcomeCreateAccount;
+
   /// No description provided for @loginTitle.
   ///
   /// In en, this message translates to:
@@ -493,7 +535,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign-in uses Supabase Authentication. Vehicle records stay on this device until you optionally sync to the server.'**
+  /// **'Welcome back — pick up right where you left off.'**
   String get loginSubtitle;
 
   /// No description provided for @emailLabel.
@@ -613,7 +655,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your account is created with Supabase. You can optionally show your name on your profile.'**
+  /// **'Create your account in a few seconds.'**
   String get registerSubtitle;
 
   /// No description provided for @displayNameLabel.
@@ -679,7 +721,7 @@ abstract class AppLocalizations {
   /// No description provided for @fuelPetrol.
   ///
   /// In en, this message translates to:
-  /// **'Petrol'**
+  /// **'Gasoline'**
   String get fuelPetrol;
 
   /// No description provided for @fuelDiesel.
@@ -1311,6 +1353,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit reminder'**
   String get editReminder;
+
+  /// No description provided for @reminderTypeAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} is already added for this vehicle.'**
+  String reminderTypeAlreadyExists(String type);
+
+  /// No description provided for @reminderAllTypesExist.
+  ///
+  /// In en, this message translates to:
+  /// **'All reminder types are already added for this vehicle.'**
+  String get reminderAllTypesExist;
 
   /// No description provided for @expiryDateLabel.
   ///

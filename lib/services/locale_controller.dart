@@ -13,7 +13,6 @@ class LocaleController extends ValueNotifier<Locale?> {
   static const List<Locale> supported = <Locale>[
     Locale('en'),
     Locale('tr'),
-    Locale('es'),
   ];
 
   Future<void> load() async {

@@ -2,6 +2,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../models/models.dart';
 import '../services/catalog_service.dart';
+import '../widgets/brand_logo_thumb.dart';
 import '../widgets/common.dart';
 import '../widgets/form_dialog.dart';
 
@@ -64,6 +65,13 @@ class _ModelsScreenState extends State<ModelsScreen> {
 
   String _brandName(int id) =>
       _brands.where((b) => b.id == id).map((b) => b.name).firstOrNull ?? '#$id';
+
+  Brand? _brandOf(int id) {
+    for (final b in _brands) {
+      if (b.id == id) return b;
+    }
+    return null;
+  }
 
   List<CarModel> get _visible {
     if (_filterBrandId == null) return _items;
@@ -235,7 +243,10 @@ class _ModelsScreenState extends State<ModelsScreen> {
                 if (m.yearEnd != null) '${m.yearEnd}',
               ].join('–');
               return CatalogRow(
-                leading: const AvatarTile(fallbackIcon: LucideIcons.layers),
+                leading: BrandLogoThumb(
+                  brand: _brandOf(m.brandId),
+                  fallbackIcon: LucideIcons.layers,
+                ),
                 title: m.name,
                 subtitle:
                     '${_brandName(m.brandId)}${m.bodyType != null ? ' · ${m.bodyType}' : ''}',

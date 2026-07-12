@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../services/session_controller.dart';
+import '../theme/app_theme.dart';
 import 'auth_widgets.dart';
 
+/// Soft UI kayıt (MyGaraj).
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -64,180 +67,221 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  Widget _field(Widget child, int index) {
+    return child
+        .animate()
+        .fadeIn(duration: 380.ms, delay: (60 + index * 50).ms)
+        .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    final TextTheme tt = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.registerAppBarTitle),
-      ),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: <Widget>[
-            SliverToBoxAdapter(
-              child: AuthBrandingHeader(
-                title: l10n.registerTitle,
-                subtitle: l10n.registerSubtitle,
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-              sliver: SliverToBoxAdapter(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      TextFormField(
-                        controller: _username,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const <String>[AutofillHints.username],
-                        decoration: InputDecoration(
-                          labelText: l10n.usernameLabel,
-                          prefixIcon: const Icon(Icons.alternate_email_rounded),
-                          helperText: l10n.usernameInvalid,
-                        ),
-                        validator: (String? v) {
-                          final String s = (v ?? '').trim().toLowerCase();
-                          if (s.isEmpty) return l10n.usernameRequired;
-                          if (!authLooksLikeUsername(s)) {
-                            return l10n.usernameInvalid;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _displayName,
-                        textCapitalization: TextCapitalization.words,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l10n.displayNameLabel,
-                          prefixIcon: const Icon(Icons.person_outline_rounded),
+    return AuthSoftScaffold(
+      onBack: _busy ? null : () => Navigator.of(context).pop(),
+      child: CustomScrollView(
+        slivers: <Widget>[
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+            sliver: SliverToBoxAdapter(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    AuthBrandingHeader(
+                      title: l10n.registerTitle,
+                      subtitle: l10n.registerSubtitle,
+                    ).animate().fadeIn(duration: 400.ms),
+                    const SizedBox(height: 24),
+                    _field(
+                      AuthSoftField(
+                        label: l10n.usernameLabel,
+                        helper: l10n.usernameInvalid,
+                        child: TextFormField(
+                        style: kAuthInputStyle,
+                          controller: _username,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const <String>[
+                            AutofillHints.username,
+                          ],
+                          decoration: authSoftDecoration(
+                            hint: l10n.usernameLabel,
+                            prefixIcon: const Icon(
+                              Icons.alternate_email_rounded,
+                              color: kAuthMuted,
+                            ),
+                          ),
+                          validator: (String? v) {
+                            final String s = (v ?? '').trim().toLowerCase();
+                            if (s.isEmpty) return l10n.usernameRequired;
+                            if (!authLooksLikeUsername(s)) {
+                              return l10n.usernameInvalid;
+                            }
+                            return null;
+                          },
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        autofillHints: const <String>[
-                          AutofillHints.email,
-                        ],
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l10n.emailLabel,
-                          prefixIcon: const Icon(Icons.mail_outline_rounded),
-                        ),
-                        validator: (String? v) {
-                          final String s = (v ?? '').trim();
-                          if (s.isEmpty) return l10n.emailRequired;
-                          if (!authLooksLikeEmail(s)) {
-                            return l10n.emailInvalid;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _password,
-                        obscureText: _obscure,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l10n.passwordLabel,
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            tooltip:
-                                _obscure ? l10n.showPassword : l10n.hidePassword,
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
+                      0,
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      AuthSoftField(
+                        label: l10n.displayNameLabel,
+                        child: TextFormField(
+                        style: kAuthInputStyle,
+                          controller: _displayName,
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.next,
+                          decoration: authSoftDecoration(
+                            hint: l10n.displayNameLabel,
+                            prefixIcon: const Icon(
+                              Icons.person_outline_rounded,
+                              color: kAuthMuted,
                             ),
                           ),
                         ),
-                        validator: (String? v) {
-                          final String s = (v ?? '');
-                          if (s.length < 6) return l10n.passwordMinLength;
-                          return null;
-                        },
                       ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _confirm,
-                        obscureText: _obscure2,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
-                        decoration: InputDecoration(
-                          labelText: l10n.confirmPasswordLabel,
-                          prefixIcon:
-                              const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            tooltip: _obscure2
-                                ? l10n.showPassword
-                                : l10n.hidePassword,
-                            onPressed: () =>
-                                setState(() => _obscure2 = !_obscure2),
-                            icon: Icon(
-                              _obscure2
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
+                      1,
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      AuthSoftField(
+                        label: l10n.emailLabel,
+                        child: TextFormField(
+                        style: kAuthInputStyle,
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const <String>[AutofillHints.email],
+                          textInputAction: TextInputAction.next,
+                          decoration: authSoftDecoration(
+                            hint: l10n.emailLabel,
+                            prefixIcon: const Icon(
+                              Icons.mail_outline_rounded,
+                              color: kAuthMuted,
                             ),
                           ),
+                          validator: (String? v) {
+                            final String s = (v ?? '').trim();
+                            if (s.isEmpty) return l10n.emailRequired;
+                            if (!authLooksLikeEmail(s)) {
+                              return l10n.emailInvalid;
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (String? v) {
-                          if ((v ?? '') != _password.text) {
-                            return l10n.passwordsDoNotMatch;
-                          }
-                          return null;
-                        },
                       ),
-                      const SizedBox(height: 26),
-                      FilledButton(
-                        onPressed: _busy ? null : _submit,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(54),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(32),
+                      2,
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      AuthSoftField(
+                        label: l10n.passwordLabel,
+                        child: TextFormField(
+                        style: kAuthInputStyle,
+                          controller: _password,
+                          obscureText: _obscure,
+                          textInputAction: TextInputAction.next,
+                          decoration: authSoftDecoration(
+                            hint: l10n.passwordLabel,
+                            prefixIcon: const Icon(
+                              Icons.lock_outline_rounded,
+                              color: kAuthMuted,
+                            ),
+                            suffixIcon: IconButton(
+                              tooltip: _obscure
+                                  ? l10n.showPassword
+                                  : l10n.hidePassword,
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: kAuthMuted,
+                              ),
+                            ),
                           ),
+                          validator: (String? v) {
+                            final String s = (v ?? '');
+                            if (s.length < 6) return l10n.passwordMinLength;
+                            return null;
+                          },
                         ),
-                        child: _busy
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(l10n.registerButton),
                       ),
-                      const SizedBox(height: 16),
-                      TextButton(
+                      3,
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      AuthSoftField(
+                        label: l10n.confirmPasswordLabel,
+                        child: TextFormField(
+                        style: kAuthInputStyle,
+                          controller: _confirm,
+                          obscureText: _obscure2,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
+                          decoration: authSoftDecoration(
+                            hint: l10n.confirmPasswordLabel,
+                            prefixIcon: const Icon(
+                              Icons.lock_outline_rounded,
+                              color: kAuthMuted,
+                            ),
+                            suffixIcon: IconButton(
+                              tooltip: _obscure2
+                                  ? l10n.showPassword
+                                  : l10n.hidePassword,
+                              onPressed: () =>
+                                  setState(() => _obscure2 = !_obscure2),
+                              icon: Icon(
+                                _obscure2
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: kAuthMuted,
+                              ),
+                            ),
+                          ),
+                          validator: (String? v) {
+                            if ((v ?? '') != _password.text) {
+                              return l10n.passwordsDoNotMatch;
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      4,
+                    ),
+                    const SizedBox(height: 28),
+                    _field(
+                      AuthPrimaryButton(
+                        label: l10n.registerButton,
+                        busy: _busy,
+                        onPressed: _submit,
+                      ),
+                      5,
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
                         onPressed:
                             _busy ? null : () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.primary,
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
                         child: Text(l10n.alreadyHaveAccountSignIn),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.registerFooterNote,
-                        textAlign: TextAlign.center,
-                        style: tt.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ).animate().fadeIn(duration: 400.ms, delay: 380.ms),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

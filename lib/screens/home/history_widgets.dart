@@ -1,132 +1,5 @@
 part of 'package:car_data_app/screens/home_screen.dart';
 
-String _historyMaintenanceFlagsShort(AppLocalizations l10n, Maintenance log) {
-  final List<String> parts = <String>[];
-  if (log.resmiServis) parts.add(l10n.flagOfficialShort);
-  if (log.garantiKapsaminda) parts.add(l10n.flagWarrantyShort);
-  if (log.faturaAlindi) parts.add(l10n.flagReceiptShort);
-  if (log.sigortaKarsiladi) parts.add(l10n.flagInsuranceShort);
-  return parts.join(' · ');
-}
-
-String _historyTimeAgo(AppLocalizations l10n, int days) {
-  if (days == 0) return l10n.today;
-  if (days < 7) return l10n.daysAgo(days);
-  if (days < 30) return l10n.weeksAgo((days / 7).floor());
-  return l10n.monthsAgo((days / 30).floor());
-}
-
-class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.log, required this.accent});
-  final Maintenance log;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = context.l10n;
-    final String localeTag =
-        localeTagFor(Localizations.localeOf(context));
-    final int days = DateTime.now().difference(log.tarih).inDays;
-    final String timeAgo = _historyTimeAgo(l10n, days);
-
-    final Color vivid = GarageCardTheming.vividForeground(accent, context);
-    return Container(
-      decoration: GarageCardTheming.garageCardDecoration(
-        context,
-        accent,
-        borderRadius: 18,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: GarageCardTheming.iconSoftFill(accent),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              log.islem.isNotEmpty ? log.islem.characters.first.toUpperCase() : '?',
-              style: TextStyle(
-                color: vivid,
-                fontWeight: FontWeight.w800,
-                fontSize: 18,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(log.islem,
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 2),
-                Text(
-                  '$timeAgo • ${DistanceFormat.format(
-                    log.km,
-                    unit: DistanceUnitController.instance.value,
-                    localeTag: localeTag,
-                    l10n: l10n,
-                  )}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color:
-                            GarageCardTheming.supportiveLabel(context, accent),
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-                if (log.hasDetailFlags) ...<Widget>[
-                  const SizedBox(height: 4),
-                  Text(
-                    _historyMaintenanceFlagsShort(l10n, log),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: GarageCardTheming.supportiveLabel(
-                              context, accent),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
-                  ),
-                ],
-                const SizedBox(height: 6),
-                Container(
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: vivid,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                NumberFormat.currency(
-                  locale: localeTag,
-                  symbol: '₺',
-                  decimalDigits: 2,
-                ).format(log.maliyet),
-                style: TextStyle(
-                  color: vivid,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _MutedTile extends StatelessWidget {
   const _MutedTile({
     required this.icon,
@@ -151,45 +24,50 @@ class _MutedTile extends StatelessWidget {
         : AppTheme.primary;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
       decoration: a != null
           ? GarageCardTheming.garageCardDecoration(
               context,
               a,
-              borderRadius: 18,
+              borderRadius: 24,
             )
           : BoxDecoration(
               color: tokens.cardBg,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: tokens.border),
             ),
       child: Row(
         children: <Widget>[
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: a != null
                   ? GarageCardTheming.iconSoftFill(a)
                   : AppTheme.primary.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: mix, size: 20),
+            child: Icon(icon, color: mix, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(title,
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 2),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 3),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: a != null
                             ? GarageCardTheming.supportiveLabel(context, a)
                             : null,
+                        height: 1.35,
                       ),
                 ),
               ],

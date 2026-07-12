@@ -137,48 +137,39 @@ class _SettingsTabState extends State<_SettingsTab> {
           },
         ),
 
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Expanded(
-                child: _SettingsCard(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        _SectionHeader(
-                          icon: Icons.wb_sunny_outlined,
-                          label: l10n.themeLabel,
-                        ),
-                        const SizedBox(height: 10),
-                        const _ThemeModeList(),
-                      ],
-                    ),
-                  ),
+        _SettingsCard(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _SectionHeader(
+                  icon: Icons.wb_sunny_outlined,
+                  label: l10n.themeLabel,
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _SettingsCard(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        _SectionHeader(
-                          icon: Icons.language_outlined,
-                          label: l10n.languageLabel,
-                        ),
-                        const SizedBox(height: 10),
-                        const _LanguageList(),
-                      ],
-                    ),
-                  ),
+                const SizedBox(height: 10),
+                const _ThemeModeList(),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        _SettingsCard(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _SectionHeader(
+                  icon: Icons.language_outlined,
+                  label: l10n.languageLabel,
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                const _LanguageList(),
+              ],
+            ),
           ),
         ),
 
@@ -332,59 +323,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _OptionTile extends StatelessWidget {
-  const _OptionTile({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.trailingIcon,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final IconData? trailingIcon;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppTokens tokens = context.tokens;
-    return Material(
-      color: selected ? _settingsSelectedBg(context) : Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
-                      ),
-                ),
-              ),
-              if (trailingIcon != null)
-                Icon(
-                  trailingIcon,
-                  size: 16,
-                  color: selected
-                      ? Theme.of(context).colorScheme.onSurface
-                      : tokens.mutedText,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ThemeModeList extends StatelessWidget {
   const _ThemeModeList();
 
@@ -393,27 +331,33 @@ class _ThemeModeList extends StatelessWidget {
     final AppLocalizations l10n = context.l10n;
     final ThemeMode mode = ThemeController.instance.value;
 
-    return Column(
+    return Row(
       children: <Widget>[
-        _OptionTile(
-          label: l10n.themeLight,
-          selected: mode == ThemeMode.light,
-          trailingIcon: Icons.wb_sunny_outlined,
-          onTap: () => ThemeController.instance.set(ThemeMode.light),
+        Expanded(
+          child: _CompactChoice(
+            label: l10n.themeLight,
+            icon: Icons.wb_sunny_outlined,
+            selected: mode == ThemeMode.light,
+            onTap: () => ThemeController.instance.set(ThemeMode.light),
+          ),
         ),
-        const SizedBox(height: 4),
-        _OptionTile(
-          label: l10n.themeDark,
-          selected: mode == ThemeMode.dark,
-          trailingIcon: Icons.dark_mode_outlined,
-          onTap: () => ThemeController.instance.set(ThemeMode.dark),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _CompactChoice(
+            label: l10n.themeDark,
+            icon: Icons.dark_mode_outlined,
+            selected: mode == ThemeMode.dark,
+            onTap: () => ThemeController.instance.set(ThemeMode.dark),
+          ),
         ),
-        const SizedBox(height: 4),
-        _OptionTile(
-          label: l10n.themeSystem,
-          selected: mode == ThemeMode.system,
-          trailingIcon: Icons.phone_iphone_outlined,
-          onTap: () => ThemeController.instance.set(ThemeMode.system),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _CompactChoice(
+            label: l10n.themeSystem,
+            icon: Icons.phone_iphone_outlined,
+            selected: mode == ThemeMode.system,
+            onTap: () => ThemeController.instance.set(ThemeMode.system),
+          ),
         ),
       ],
     );
@@ -433,31 +377,84 @@ class _LanguageList extends StatelessWidget {
         final Locale effective = current ?? LocaleController.resolve(null);
         final String tag = effective.languageCode;
 
-        return Column(
+        return Row(
           children: <Widget>[
-            _OptionTile(
-              label: l10n.languageEnglish,
-              selected: tag == 'en',
-              onTap: () =>
-                  LocaleController.instance.set(const Locale('en')),
+            Expanded(
+              child: _CompactChoice(
+                label: l10n.languageEnglish,
+                selected: tag == 'en',
+                onTap: () =>
+                    LocaleController.instance.set(const Locale('en')),
+              ),
             ),
-            const SizedBox(height: 4),
-            _OptionTile(
-              label: l10n.languageTurkish,
-              selected: tag == 'tr',
-              onTap: () =>
-                  LocaleController.instance.set(const Locale('tr')),
-            ),
-            const SizedBox(height: 4),
-            _OptionTile(
-              label: l10n.languageSpanish,
-              selected: tag == 'es',
-              onTap: () =>
-                  LocaleController.instance.set(const Locale('es')),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _CompactChoice(
+                label: l10n.languageTurkish,
+                selected: tag == 'tr',
+                onTap: () =>
+                    LocaleController.instance.set(const Locale('tr')),
+              ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _CompactChoice extends StatelessWidget {
+  const _CompactChoice({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppTokens tokens = context.tokens;
+    return Material(
+      color: selected ? _settingsSelectedBg(context) : tokens.surfaceMuted,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (icon != null) ...<Widget>[
+                Icon(
+                  icon,
+                  size: 18,
+                  color: selected
+                      ? Theme.of(context).colorScheme.onSurface
+                      : tokens.mutedText,
+                ),
+                const SizedBox(height: 6),
+              ],
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight:
+                          selected ? FontWeight.w800 : FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

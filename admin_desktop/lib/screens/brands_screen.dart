@@ -6,6 +6,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../models/models.dart';
 import '../services/catalog_service.dart';
+import '../widgets/brand_logo_thumb.dart';
 import '../widgets/common.dart';
 import '../widgets/form_dialog.dart';
 
@@ -30,12 +31,22 @@ class _BrandsScreenState extends State<BrandsScreen> {
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool syncLogos = true}) async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
+      if (syncLogos) {
+        try {
+          final n = await widget.catalog.syncBrandLogoUrls();
+          if (n > 0 && mounted) {
+            showSnack(context, '$n marka logosu güncellendi.');
+          }
+        } catch (_) {
+          // Görüntüleme CDN fallback ile devam eder; DB yazılamasa da UI dolsun.
+        }
+      }
       final results = await Future.wait([
         widget.catalog.listBrands(),
         widget.catalog.listModels(),
@@ -303,21 +314,12 @@ class _BrandCardState extends State<_BrandCard> {
                   SizedBox(
                     width: 56,
                     height: 56,
-                    child: b.logoUrl != null
-                        ? Image.network(
-                            b.logoUrl!,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) => Icon(
-                              LucideIcons.tag,
-                              size: 28,
-                              color: theme.colorScheme.mutedForeground,
-                            ),
-                          )
-                        : Icon(
-                            LucideIcons.tag,
-                            size: 28,
-                            color: theme.colorScheme.mutedForeground,
-                          ),
+                    child: BrandLogoThumb(
+                      brand: b,
+                      size: 56,
+                      radius: 12,
+                      padding: 6,
+                    ),
                   ),
                   const Gap(14),
                   Expanded(

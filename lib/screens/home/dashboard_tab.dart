@@ -46,7 +46,6 @@ class _DashboardTab extends StatelessWidget {
             currentCar.clamp(0, data.cars.length - 1);
         final Car car = data.cars[idx];
         final List<Reminder> reminders = data.remindersOf(car.id!);
-        final List<Maintenance> logs = data.maintenanceOf(car.id!);
         final Color garageAccent = GarageCardTheming.accentForCar(car);
         final Color ctaOutline =
             GarageCardTheming.ctaOutlinedColor(garageAccent, context);
@@ -93,125 +92,141 @@ class _DashboardTab extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
-              // Compact stats below the hero card.
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _CarStatsStrip(
-                  car: car,
-                  logs: logs,
-                  accent: garageAccent,
-                ),
-              ),
               const SizedBox(height: 22),
 
-              // Dikkat gereken hatırlatmalar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(context.l10n.needsAttention,
-                    style: Theme.of(context).textTheme.titleMedium),
-              ),
-              const SizedBox(height: 10),
+              // Dikkat gereken hatırlatmalar — sadece liste varken başlık
+              if (reminders.isNotEmpty) ...<Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(context.l10n.needsAttention,
+                      style: Theme.of(context).textTheme.titleMedium),
+                ),
+                const SizedBox(height: 10),
+              ],
               _NeedsAttentionList(
                 car: car,
                 reminders: reminders,
                 accent: garageAccent,
+                onRefresh: onRefresh,
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Bakım geçmişi
+              // Bakım geçmişi — sol metin, sağa motor fotoğrafı + yumuşak fade
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Text(context.l10n.maintenanceHistory,
-                          style: Theme.of(context).textTheme.titleMedium),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => MaintenanceScreen(car: car),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(32),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MaintenanceScreen(car: car),
+                        ),
+                      );
+                    },
+                    child: Ink(
+                      height: 118,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 14,
+                            offset: const Offset(0, 5),
                           ),
-                        );
-                      },
-                      child: Row(
-                        children: <Widget>[
-                          Text(context.l10n.seeAll,
-                              style: TextStyle(
-                                  color: GarageCardTheming.vividForeground(
-                                      garageAccent, context),
-                                  fontWeight: FontWeight.w700)),
-                          Icon(Icons.chevron_right,
-                              color: GarageCardTheming.vividForeground(
-                                  garageAccent, context),
-                              size: 18),
                         ],
                       ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(32),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: <Widget>[
+                            Image.asset(
+                              'assets/images/maintenance_hero.jpg',
+                              fit: BoxFit.cover,
+                              alignment: const Alignment(0.65, 0),
+                              errorBuilder: (_, _, _) => const ColoredBox(
+                                color: Color(0xFFE8ECF0),
+                              ),
+                            ),
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: <Color>[
+                                    Color(0xFFF4F5F7),
+                                    Color(0xFFF4F5F7),
+                                    Color(0xCCF4F5F7),
+                                    Color(0x66F4F5F7),
+                                    Color(0x00F4F5F7),
+                                  ],
+                                  stops: <double>[
+                                    0.0,
+                                    0.28,
+                                    0.48,
+                                    0.72,
+                                    1.0,
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(22, 18, 18, 18),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 200),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      Text(
+                                        context.l10n.maintenanceHistory,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              height: 1.15,
+                                              letterSpacing: -0.3,
+                                              color: const Color(0xFF1A2332),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        context
+                                            .l10n.maintenanceHistorySubtitle,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              height: 1.35,
+                                              color: const Color(0xFF6B7585),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
-              if (logs.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _MutedTile(
-                    icon: Icons.build_outlined,
-                    title: context.l10n.noMaintenanceYet,
-                    subtitle: context.l10n.noMaintenanceHint,
-                    accent: garageAccent,
-                  ),
-                ),
-              ...logs.take(3).map(
-                    (Maintenance m) =>
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                          child: _HistoryTile(
-                            log: m,
-                            accent: garageAccent,
-                          ),
-                        ),
-                  ),
 
               const SizedBox(height: 18),
 
-              // CTA (seçili araç rengine bağlı — nötr gri yerine canlı accent)
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor:
-                        GarageCardTheming.ctaFilledBackground(garageAccent),
-                    foregroundColor:
-                        GarageCardTheming.ctaOnFilled(garageAccent),
-                    minimumSize: const Size.fromHeight(54),
-                    elevation: 2,
-                    shadowColor: garageAccent.withValues(alpha: 0.42),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                  ),
-                  onPressed: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => ReminderScreen(car: car),
-                      ),
-                    );
-                    await onRefresh();
-                  },
-                  icon: const Icon(Icons.notification_add_outlined),
-                  label: Text(
-                    context.l10n.addReminder,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 14),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: OutlinedButton.icon(
@@ -243,6 +258,48 @@ class _DashboardTab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _DotsIndicator extends StatelessWidget {
+  const _DotsIndicator({
+    required this.count,
+    required this.current,
+    required this.accent,
+  });
+
+  final int count;
+  final int current;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color base = GarageCardTheming.vividForeground(accent, context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List<Widget>.generate(count, (int i) {
+        final bool active = i == current;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: active ? 20 : 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: active ? base : base.withValues(alpha: 0.28),
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: active
+                ? <BoxShadow>[
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.45),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ]
+                : null,
+          ),
+        );
+      }),
     );
   }
 }

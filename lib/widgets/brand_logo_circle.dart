@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../data/brand_logo_domains.dart';
+import '../data/brand_logos.dart';
 
 String _brandInitial(String marka) {
   final String m = marka.trim();
@@ -8,7 +8,7 @@ String _brandInitial(String marka) {
   return m.substring(0, 1).toUpperCase();
 }
 
-/// Marka için mümkünse Clearbit logosu, yoksa beyaz zemin üzerinde harf.
+/// Marka için yerel logo asset’i; yoksa beyaz zemin üzerinde harf.
 class BrandLogoCircle extends StatelessWidget {
   const BrandLogoCircle({
     super.key,
@@ -23,7 +23,7 @@ class BrandLogoCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? domain = BrandLogoDomains.clearbitDomainFor(marka);
+    final String? asset = BrandLogos.assetFor(marka);
     final Widget letter = Text(
       _brandInitial(marka),
       style: TextStyle(
@@ -40,10 +40,11 @@ class BrandLogoCircle extends StatelessWidget {
         height: size,
         color: Colors.white,
         alignment: Alignment.center,
-        child: domain == null
+        padding: EdgeInsets.all(size * 0.12),
+        child: asset == null
             ? letter
-            : Image.network(
-                'https://logo.clearbit.com/$domain',
+            : Image.asset(
+                asset,
                 width: size,
                 height: size,
                 fit: BoxFit.contain,
@@ -51,11 +52,6 @@ class BrandLogoCircle extends StatelessWidget {
                 errorBuilder:
                     (BuildContext context, Object error, StackTrace? st) =>
                         letter,
-                loadingBuilder:
-                    (BuildContext context, Widget child, ImageChunkEvent? evt) {
-                  if (evt == null) return child;
-                  return letter;
-                },
               ),
       ),
     );

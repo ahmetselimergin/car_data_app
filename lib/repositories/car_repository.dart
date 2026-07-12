@@ -2,7 +2,7 @@ import '../models/car_model.dart';
 import '../services/database_helper.dart';
 
 /// UI katmanının doğrudan veritabanıyla konuşmasını engelleyen soyutlama.
-  /// İleride [SupabaseCarRepository] gibi farklı bir uygulaması yazılabilir.
+/// Üretim: [SupabaseCarRepository]. Yerel test: [SqliteCarRepository].
 abstract class CarRepository {
   Future<int> addCar(Car car);
   Future<List<Car>> getCars();

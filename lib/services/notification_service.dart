@@ -18,6 +18,9 @@ class NotificationService {
 
   static const String _channelId = 'car_reminders_channel';
 
+  /// Bitiş tarihinden kaç gün önce bildirim (sistem tepsisi).
+  static const List<int> alertOffsetsDays = <int>[15, 7, 1];
+
   Future<void> init() async {
     if (_initialized) return;
 
@@ -38,7 +41,7 @@ class NotificationService {
       macOS: iosInit,
     );
 
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(settings: initSettings);
 
     final AppLocalizations l10n =
         lookupAppLocalizations(LocaleController.resolve(null));
@@ -63,11 +66,14 @@ class NotificationService {
     _initialized = true;
   }
 
-  /// Hatırlatıcıyı, bitiş tarihinden [daysBefore] gün önce saat 09:00'da planlar.
+  /// Benzersiz bildirim id: `reminderId * 100 + daysBefore` (15 / 7 / 1).
+  static int notificationIdFor(int reminderId, int daysBefore) =>
+      reminderId * 100 + daysBefore;
+
+  /// Hatırlatıcı için 15 / 7 / 1 gün kala saat 09:00 bildirimlerini planlar.
   Future<void> scheduleReminder(
     Reminder reminder, {
     String carLabel = '',
-    int daysBefore = 7,
   }) async {
     await init();
     if (reminder.id == null) return;
@@ -75,16 +81,8 @@ class NotificationService {
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool('notifications_enabled') ?? true)) return;
 
-    final DateTime triggerLocal = reminder.bitisTarihi
-        .subtract(Duration(days: daysBefore))
-        .copyWith(hour: 9, minute: 0, second: 0, millisecond: 0, microsecond: 0);
-
-    if (triggerLocal.isBefore(DateTime.now())) {
-      return;
-    }
-
-    final tz.TZDateTime tzTime =
-        tz.TZDateTime.from(triggerLocal, tz.local);
+    // Yeniden planlamadan önce eski 3 uyarıyı temizle.
+    await cancelReminder(reminder.id!);
 
     final AppLocalizations l10n =
         lookupAppLocalizations(LocaleController.resolve(null));
@@ -106,27 +104,46 @@ class NotificationService {
       macOS: iosDetails,
     );
 
-    final String title = l10n.notificationTitle(typeLabel);
-    final String body = carLabel.isEmpty
-        ? l10n.notificationBody(daysBefore, typeLabel)
-        : l10n.notificationBodyWithCar(daysBefore, typeLabel, carLabel);
+    final DateTime now = DateTime.now();
 
-    await _plugin.zonedSchedule(
-      reminder.id!,
-      title,
-      body,
-      tzTime,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      payload: 'reminder_${reminder.id}',
-    );
+    for (final int daysBefore in alertOffsetsDays) {
+      final DateTime triggerLocal = reminder.bitisTarihi
+          .subtract(Duration(days: daysBefore))
+          .copyWith(
+            hour: 9,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+            microsecond: 0,
+          );
+
+      if (!triggerLocal.isAfter(now)) continue;
+
+      final tz.TZDateTime tzTime = tz.TZDateTime.from(triggerLocal, tz.local);
+      final String title = l10n.notificationTitle(typeLabel);
+      final String body = carLabel.isEmpty
+          ? l10n.notificationBody(daysBefore, typeLabel)
+          : l10n.notificationBodyWithCar(daysBefore, typeLabel, carLabel);
+
+      await _plugin.zonedSchedule(
+        id: notificationIdFor(reminder.id!, daysBefore),
+        title: title,
+        body: body,
+        scheduledDate: tzTime,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: 'reminder_${reminder.id}_d$daysBefore',
+      );
+    }
   }
 
   Future<void> cancelReminder(int reminderId) async {
     await init();
-    await _plugin.cancel(reminderId);
+    for (final int daysBefore in alertOffsetsDays) {
+      await _plugin.cancel(id: notificationIdFor(reminderId, daysBefore));
+    }
+    // Eski tek-bildirim id’si (v1) varsa onu da temizle.
+    await _plugin.cancel(id: reminderId);
   }
 
   Future<void> cancelAll() async {

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/brand_logo_cdn.dart';
 import '../models/models.dart';
 
 const brandLogosBucket = 'brand-logos';
@@ -134,6 +135,24 @@ class CatalogService {
   Future<void> deleteBrand(Brand brand) async {
     await _deleteBrandLogoIfStored(brand.logoUrl);
     await _client.from('brands').delete().eq('id', brand.id);
+  }
+
+  /// Eksik / SVG / eski storage logolarını CDN PNG ile değiştirir.
+  /// Dönüş: güncellenen marka sayısı.
+  Future<int> syncBrandLogoUrls() async {
+    final brands = await listBrands();
+    var patched = 0;
+    for (final b in brands) {
+      final desired = BrandLogoCdn.urlForSlug(b.slug);
+      if (desired == null) continue;
+      if (b.logoUrl == desired) continue;
+
+      // Eski storage yüklemesini (ör. yanlış VW) temizle.
+      await _deleteBrandLogoIfStored(b.logoUrl);
+      await _client.from('brands').update({'logo_url': desired}).eq('id', b.id);
+      patched += 1;
+    }
+    return patched;
   }
 
   // ——— Models ———

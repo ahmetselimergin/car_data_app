@@ -5,6 +5,27 @@ import '../services/catalog_service.dart';
 import '../widgets/common.dart';
 import '../widgets/form_dialog.dart';
 
+const _transmissions = [
+  'Manuel',
+  'Otomatik',
+  'Yarı otomatik',
+  'CVT',
+];
+
+const _fuels = [
+  'Benzin',
+  'Dizel',
+  'LPG',
+  'Hibrit',
+  'Plug-in hibrit',
+  'Elektrik',
+];
+
+List<int> _yearOptions({int minYear = 1980}) {
+  final now = DateTime.now().year;
+  return [for (var y = now + 1; y >= minYear; y--) y];
+}
+
 class CarsScreen extends StatefulWidget {
   const CarsScreen({super.key, required this.catalog});
 
@@ -19,6 +40,7 @@ class _CarsScreenState extends State<CarsScreen> {
   String? _error;
   List<Car> _items = [];
   List<Brand> _brands = [];
+  List<CarModel> _models = [];
 
   @override
   void initState() {
@@ -32,12 +54,16 @@ class _CarsScreenState extends State<CarsScreen> {
       _error = null;
     });
     try {
-      final brands = await widget.catalog.listBrands();
-      final cars = await widget.catalog.listCars();
+      final results = await Future.wait([
+        widget.catalog.listBrands(),
+        widget.catalog.listModels(),
+        widget.catalog.listCars(),
+      ]);
       if (!mounted) return;
       setState(() {
-        _brands = brands;
-        _items = cars;
+        _brands = results[0] as List<Brand>;
+        _models = results[1] as List<CarModel>;
+        _items = results[2] as List<Car>;
         _loading = false;
       });
     } catch (e) {
@@ -47,6 +73,20 @@ class _CarsScreenState extends State<CarsScreen> {
         _loading = false;
       });
     }
+  }
+
+  List<CarModel> _modelsForBrand(int? brandId) {
+    if (brandId == null) return const [];
+    return _models.where((m) => m.brandId == brandId).toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  Brand? _brandById(int? id) {
+    if (id == null) return null;
+    for (final b in _brands) {
+      if (b.id == id) return b;
+    }
+    return null;
   }
 
   Map<String, dynamic> _payload({
@@ -80,160 +120,240 @@ class _CarsScreenState extends State<CarsScreen> {
 
   Future<void> _openForm({Car? editing}) async {
     final plaka = TextEditingController(text: editing?.plaka ?? '');
-    final marka = TextEditingController(text: editing?.marka ?? '');
-    final model = TextEditingController(text: editing?.model ?? '');
-    final yil = TextEditingController(
-      text: '${editing?.yil ?? DateTime.now().year}',
-    );
     final km = TextEditingController(text: '${editing?.km ?? 0}');
-    final transmission =
-        TextEditingController(text: editing?.transmission ?? '');
-    final fuelType = TextEditingController(text: editing?.fuelType ?? '');
     final color = TextEditingController(text: editing?.color ?? '');
     final imageUrl = TextEditingController(text: editing?.imageUrl ?? '');
     final notes = TextEditingController(text: editing?.notes ?? '');
     final ownerUid = TextEditingController(text: editing?.ownerUid ?? '');
+
     int? brandId = editing?.brandId;
+    if (brandId == null && editing != null) {
+      for (final b in _brands) {
+        if (b.name.toLowerCase() == editing.marka.toLowerCase()) {
+          brandId = b.id;
+          break;
+        }
+      }
+    }
+
+    String? modelName = editing?.model;
+    if (brandId != null && modelName != null) {
+      final match = _modelsForBrand(brandId)
+          .where((m) => m.name == modelName)
+          .firstOrNull;
+      modelName = match?.name ?? modelName;
+    }
+
+    var yil = editing?.yil ?? DateTime.now().year;
+    String? transmission = editing?.transmission;
+    if (transmission != null && !_transmissions.contains(transmission)) {
+      // Eski serbest metin — listede yoksa null (yeniden seçilsin)
+      if (!_transmissions.any(
+        (t) => t.toLowerCase() == transmission!.toLowerCase(),
+      )) {
+        transmission = null;
+      } else {
+        transmission = _transmissions.firstWhere(
+          (t) => t.toLowerCase() == transmission!.toLowerCase(),
+        );
+      }
+    }
+
+    String? fuelType = editing?.fuelType;
+    if (fuelType != null) {
+      final lower = fuelType.toLowerCase();
+      if (lower == 'petrol' ||
+          lower == 'benzin' ||
+          lower == 'gasolina' ||
+          lower == 'gasoline') {
+        fuelType = 'Benzin';
+      } else {
+        fuelType = _fuels
+            .where((f) => f.toLowerCase() == lower)
+            .firstOrNull;
+      }
+    }
+
+    final years = _yearOptions();
+    if (!years.contains(yil)) {
+      years.insert(0, yil);
+    }
 
     final saved = await showFormDialog(
       context: context,
       title: editing == null ? 'Yeni araç' : 'Aracı düzenle',
       width: 480,
-      builder: (ctx, setLocal) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          FormLabeledField(
-            label: 'Plaka',
-            child: TextField(
-              controller: plaka,
-              placeholder: const Text('34 ABC 123'),
+      builder: (ctx, setLocal) {
+        final brandModels = _modelsForBrand(brandId);
+        final modelItems = <(String, String)>[
+          for (final m in brandModels) (m.name, m.name),
+        ];
+        if (modelName != null &&
+            modelName!.isNotEmpty &&
+            !modelItems.any((e) => e.$1 == modelName)) {
+          modelItems.insert(0, (modelName!, modelName!));
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormLabeledField(
+              label: 'Plaka',
+              child: TextField(
+                controller: plaka,
+                placeholder: const Text('34 ABC 123'),
+              ),
             ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Marka (katalog)',
-            child: AppSelect<int>(
-              value: brandId,
-              canUnselect: true,
-              placeholder: '—',
-              items: [
-                for (final b in _brands) (b.id, b.name),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Marka',
+              child: AppSelect<int>(
+                value: brandId,
+                placeholder: 'Marka seç',
+                items: [
+                  for (final b in _brands) (b.id, b.name),
+                ],
+                onChanged: (v) {
+                  setLocal(() {
+                    brandId = v;
+                    modelName = null;
+                  });
+                },
+              ),
+            ),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Model',
+              child: AppSelect<String>(
+                value: modelName,
+                placeholder: brandId == null ? 'Önce marka seç' : 'Model seç',
+                items: modelItems,
+                onChanged: brandId == null
+                    ? (_) {}
+                    : (v) => setLocal(() => modelName = v),
+              ),
+            ),
+            const Gap(14),
+            Row(
+              children: [
+                Expanded(
+                  child: FormLabeledField(
+                    label: 'Yıl',
+                    child: AppSelect<int>(
+                      value: yil,
+                      items: [
+                        for (final y in years) (y, '$y'),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setLocal(() => yil = v);
+                      },
+                    ),
+                  ),
+                ),
+                const Gap(12),
+                Expanded(
+                  child: FormLabeledField(
+                    label: 'Km',
+                    child: TextField(
+                      controller: km,
+                      keyboardType: TextInputType.number,
+                      placeholder: const Text('0'),
+                    ),
+                  ),
+                ),
               ],
-              onChanged: (v) {
-                setLocal(() {
-                  brandId = v;
-                  if (v != null) {
-                    final b = _brands.firstWhere((x) => x.id == v);
-                    marka.text = b.name;
-                  }
-                });
-              },
             ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Marka metni',
-            child: TextField(
-              controller: marka,
-              placeholder: const Text('Marka'),
-            ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Model',
-            child: TextField(
-              controller: model,
-              placeholder: const Text('Model'),
-            ),
-          ),
-          const Gap(14),
-          Row(
-            children: [
-              Expanded(
-                child: FormLabeledField(
-                  label: 'Yıl',
-                  child: TextField(
-                    controller: yil,
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Vites',
+              child: AppSelect<String>(
+                value: transmission,
+                placeholder: 'Vites seç',
+                items: [
+                  for (final t in _transmissions) (t, t),
+                ],
+                onChanged: (v) => setLocal(() => transmission = v),
               ),
-              const Gap(12),
-              Expanded(
-                child: FormLabeledField(
-                  label: 'Km',
-                  child: TextField(
-                    controller: km,
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
+            ),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Yakıt',
+              child: AppSelect<String>(
+                value: fuelType,
+                placeholder: 'Yakıt seç',
+                items: [
+                  for (final f in _fuels) (f, f),
+                ],
+                onChanged: (v) => setLocal(() => fuelType = v),
               ),
-            ],
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Vites',
-            child: TextField(
-              controller: transmission,
-              placeholder: const Text('Opsiyonel'),
             ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Yakıt',
-            child: TextField(
-              controller: fuelType,
-              placeholder: const Text('Opsiyonel'),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Renk',
+              child: TextField(
+                controller: color,
+                placeholder: const Text('Opsiyonel'),
+              ),
             ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Renk',
-            child: TextField(
-              controller: color,
-              placeholder: const Text('Opsiyonel'),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Görsel URL',
+              child: TextField(
+                controller: imageUrl,
+                placeholder: const Text('https://…'),
+              ),
             ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Görsel URL',
-            child: TextField(
-              controller: imageUrl,
-              placeholder: const Text('https://…'),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Sahip kullanıcı ID',
+              helper: 'Supabase Auth kullanıcı id',
+              child: TextField(
+                controller: ownerUid,
+                placeholder: const Text('uuid'),
+              ),
             ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Sahip kullanıcı ID',
-            helper: 'Supabase Auth kullanıcı id',
-            child: TextField(
-              controller: ownerUid,
-              placeholder: const Text('uuid'),
+            const Gap(14),
+            FormLabeledField(
+              label: 'Notlar',
+              child: TextField(
+                controller: notes,
+                placeholder: const Text('Opsiyonel'),
+                maxLines: 3,
+              ),
             ),
-          ),
-          const Gap(14),
-          FormLabeledField(
-            label: 'Notlar',
-            child: TextField(
-              controller: notes,
-              placeholder: const Text('Opsiyonel'),
-              maxLines: 3,
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
 
     if (saved != true || !mounted) return;
+
+    final brand = _brandById(brandId);
+    if (brand == null) {
+      showSnack(context, 'Marka seçilmedi.', error: true);
+      return;
+    }
+    if (modelName == null || modelName!.trim().isEmpty) {
+      showSnack(context, 'Model seçilmedi.', error: true);
+      return;
+    }
+    if (transmission == null || transmission!.isEmpty) {
+      showSnack(context, 'Vites seçilmedi.', error: true);
+      return;
+    }
+    if (fuelType == null || fuelType!.isEmpty) {
+      showSnack(context, 'Yakıt seçilmedi.', error: true);
+      return;
+    }
+
     final body = _payload(
       plaka: plaka.text,
-      marka: marka.text,
-      model: model.text,
-      yil: int.tryParse(yil.text) ?? DateTime.now().year,
+      marka: brand.name,
+      model: modelName!.trim(),
+      yil: yil,
       km: int.tryParse(km.text) ?? 0,
-      transmission:
-          transmission.text.trim().isEmpty ? null : transmission.text.trim(),
-      fuelType: fuelType.text.trim().isEmpty ? null : fuelType.text.trim(),
+      transmission: transmission,
+      fuelType: fuelType,
       color: color.text.trim().isEmpty ? null : color.text.trim(),
       imageUrl: imageUrl.text.trim().isEmpty ? null : imageUrl.text.trim(),
       notes: notes.text.trim().isEmpty ? null : notes.text.trim(),
@@ -264,7 +384,7 @@ class _CarsScreenState extends State<CarsScreen> {
           icon: const Icon(LucideIcons.refreshCw, size: 16),
         ),
         PrimaryButton(
-          onPressed: () => _openForm(),
+          onPressed: _brands.isEmpty ? null : () => _openForm(),
           leading: const Icon(LucideIcons.plus, size: 14),
           child: const Text('Ekle'),
         ),

@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/welcome_screen.dart';
+import 'services/onboarding_controller.dart';
 import 'services/session_controller.dart';
 
 /// Supabase oturumu yoksa [LoginScreen], varsa [HomeScreen].
@@ -23,6 +25,7 @@ class _AppSessionGateState extends State<AppSessionGate> {
   void initState() {
     super.initState();
     SessionController.instance.addListener(_onSessionChanged);
+    OnboardingController.instance.addListener(_onSessionChanged);
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       SessionController.instance.syncFromUser(data.session?.user);
     });
@@ -43,6 +46,7 @@ class _AppSessionGateState extends State<AppSessionGate> {
   void dispose() {
     _authSub?.cancel();
     SessionController.instance.removeListener(_onSessionChanged);
+    OnboardingController.instance.removeListener(_onSessionChanged);
     super.dispose();
   }
 
@@ -53,8 +57,11 @@ class _AppSessionGateState extends State<AppSessionGate> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    return SessionController.instance.value != null
-        ? const HomeScreen()
-        : const LoginScreen();
+    if (SessionController.instance.value != null) {
+      return const HomeScreen();
+    }
+    return OnboardingController.instance.hasSeenWelcome
+        ? const LoginScreen()
+        : const WelcomeScreen();
   }
 }

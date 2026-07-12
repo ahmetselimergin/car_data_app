@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Garage';
+  String get appTitle => 'MyGaraj';
 
   @override
   String get navMyCars => 'My vehicles';
@@ -101,7 +101,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsSubtitle =>
-      'A notification is sent 7 days before the reminder date.';
+      'Notifications are sent 15, 7, and 1 day before the reminder.';
 
   @override
   String get versionLabel => 'Version';
@@ -121,6 +121,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maintenanceHistory => 'Maintenance history';
+
+  @override
+  String get maintenanceHistorySubtitle => 'View all service work performed';
 
   @override
   String get seeAll => 'See all';
@@ -165,13 +168,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get allUpToDate => 'All up to date';
+  String get allUpToDate => 'Reminders';
 
   @override
-  String get noUpcomingReminders => 'No upcoming reminders for this vehicle.';
+  String get noUpcomingReminders => 'No upcoming reminders';
 
   @override
   String get add => 'Add';
+
+  @override
+  String get addNew => 'Add new';
 
   @override
   String get expired => 'Expired';
@@ -219,11 +225,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get welcomeTitle => 'Your garage, all in one place';
+
+  @override
+  String get welcomeSubtitle =>
+      'Track maintenance, mileage and reminders for every car you own.';
+
+  @override
+  String get welcomeGetStarted => 'Get started';
+
+  @override
+  String get welcomeSwipeHint => 'Swipe to enter';
+
+  @override
+  String get welcomeCreateAccount => 'Create an account';
+
+  @override
   String get loginTitle => 'Sign in';
 
   @override
   String get loginSubtitle =>
-      'Sign-in uses Supabase Authentication. Vehicle records stay on this device until you optionally sync to the server.';
+      'Welcome back — pick up right where you left off.';
 
   @override
   String get emailLabel => 'Email';
@@ -285,8 +307,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerTitle => 'Create account';
 
   @override
-  String get registerSubtitle =>
-      'Your account is created with Supabase. You can optionally show your name on your profile.';
+  String get registerSubtitle => 'Create your account in a few seconds.';
 
   @override
   String get displayNameLabel => 'Full name (optional)';
@@ -320,7 +341,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transmissionCvt => 'CVT';
 
   @override
-  String get fuelPetrol => 'Petrol';
+  String get fuelPetrol => 'Gasoline';
 
   @override
   String get fuelDiesel => 'Diesel';
@@ -657,6 +678,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editReminder => 'Edit reminder';
+
+  @override
+  String reminderTypeAlreadyExists(String type) {
+    return '$type is already added for this vehicle.';
+  }
+
+  @override
+  String get reminderAllTypesExist =>
+      'All reminder types are already added for this vehicle.';
 
   @override
   String get expiryDateLabel => 'Expiry date';

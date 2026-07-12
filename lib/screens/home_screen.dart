@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:ms_undraw/ms_undraw.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,10 +14,13 @@ import '../models/reminder_model.dart';
 import '../repositories/car_repository.dart';
 import '../repositories/maintenance_repository.dart';
 import '../repositories/reminder_repository.dart';
+import '../repositories/supabase_car_repository.dart';
 import '../l10n/l10n_ext.dart';
 import '../services/date_helper.dart';
 import '../services/distance_unit_controller.dart';
+import '../services/image_storage_service.dart';
 import '../services/locale_controller.dart';
+import '../services/notification_service.dart';
 import '../utils/distance_format.dart';
 import '../services/session_controller.dart';
 import '../utils/car_image_normalize.dart';
@@ -35,7 +38,6 @@ import 'reminder_screen.dart';
 part 'home/garage_data.dart';
 part 'home/dashboard_tab.dart';
 part 'home/car_header_card.dart';
-part 'home/car_stats_strip.dart';
 part 'home/needs_attention.dart';
 part 'home/history_widgets.dart';
 part 'home/empty_garage.dart';
@@ -53,7 +55,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
 
-  final CarRepository _carRepo = SqliteCarRepository();
+  final CarRepository _carRepo = SupabaseCarRepository();
   final ReminderRepository _reminderRepo = SqliteReminderRepository();
   final MaintenanceRepository _mRepo = SqliteMaintenanceRepository();
 
@@ -71,7 +73,29 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<_GarageData> _bootstrap() async {
     final _GarageData d = await _load();
     if (mounted) setState(() => _cachedGarage = d);
+    // Mevcut hatırlatıcılar için 15/7/1 gün bildirimlerini yenile.
+    unawaited(_rescheduleAllNotifications(d));
     return d;
+  }
+
+  Future<void> _rescheduleAllNotifications(_GarageData data) async {
+    final Map<int, Car> carsById = <int, Car>{
+      for (final Car c in data.cars)
+        if (c.id != null) c.id!: c,
+    };
+    for (final Reminder r in data.reminders) {
+      if (r.id == null) continue;
+      final Car? car = carsById[r.carId];
+      final String label = car == null
+          ? ''
+          : '${car.marka} ${car.model} (${car.plaka})';
+      try {
+        await NotificationService.instance.scheduleReminder(
+          r,
+          carLabel: label,
+        );
+      } catch (_) {}
+    }
   }
 
   @override

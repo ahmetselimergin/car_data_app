@@ -9,7 +9,7 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get appTitle => 'Garaje';
+  String get appTitle => 'MyGaraj';
 
   @override
   String get navMyCars => 'Mis vehículos';
@@ -101,7 +101,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationsSubtitle =>
-      'Se envía una notificación 7 días antes de la fecha del recordatorio.';
+      'Se envían notificaciones 15, 7 y 1 día antes del recordatorio.';
 
   @override
   String get versionLabel => 'Versión';
@@ -121,6 +121,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get maintenanceHistory => 'Historial de mantenimiento';
+
+  @override
+  String get maintenanceHistorySubtitle => 'Ver todos los servicios realizados';
 
   @override
   String get seeAll => 'Ver todo';
@@ -176,6 +179,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get add => 'Añadir';
 
   @override
+  String get addNew => 'Añadir nuevo';
+
+  @override
   String get expired => 'Caducado';
 
   @override
@@ -221,11 +227,26 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get welcomeTitle => 'Tu garaje, todo en un solo lugar';
+
+  @override
+  String get welcomeSubtitle =>
+      'Controla el mantenimiento, el kilometraje y los recordatorios de todos tus coches.';
+
+  @override
+  String get welcomeGetStarted => 'Empezar';
+
+  @override
+  String get welcomeSwipeHint => 'Desliza para entrar';
+
+  @override
+  String get welcomeCreateAccount => 'Crear una cuenta';
+
+  @override
   String get loginTitle => 'Iniciar sesión';
 
   @override
-  String get loginSubtitle =>
-      'El inicio de sesión usa Supabase Authentication. Los registros del vehículo permanecen en este dispositivo hasta que decidas sincronizar con el servidor.';
+  String get loginSubtitle => 'Bienvenido de nuevo: continúa donde lo dejaste.';
 
   @override
   String get emailLabel => 'Correo electrónico';
@@ -287,8 +308,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get registerTitle => 'Crear cuenta';
 
   @override
-  String get registerSubtitle =>
-      'La cuenta se crea con Supabase. Puedes mostrar tu nombre en el perfil de forma opcional.';
+  String get registerSubtitle => 'Crea tu cuenta en unos segundos.';
 
   @override
   String get displayNameLabel => 'Nombre completo (opcional)';
@@ -662,6 +682,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editReminder => 'Editar recordatorio';
+
+  @override
+  String reminderTypeAlreadyExists(String type) {
+    return '$type ya está añadido para este vehículo.';
+  }
+
+  @override
+  String get reminderAllTypesExist =>
+      'Ya están añadidos todos los tipos de recordatorio para este vehículo.';
 
   @override
   String get expiryDateLabel => 'Fecha de vencimiento';

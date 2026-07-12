@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/car_model.dart';
 import '../models/maintenance_model.dart';
 import '../models/reminder_model.dart';
+import 'image_storage_service.dart';
 
 class DatabaseHelper {
   DatabaseHelper._privateConstructor();
@@ -131,11 +132,53 @@ class DatabaseHelper {
     return db.insert(tableCars, car.toMap()..remove('id'));
   }
 
+  /// Supabase id'sini yerel FK'ler için aynen saklar.
+  Future<int> insertCarWithId(Car car) async {
+    if (car.id == null) {
+      throw ArgumentError('insertCarWithId için id zorunlu.');
+    }
+    final Database db = await database;
+    return db.insert(
+      tableCars,
+      car.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   Future<List<Car>> getAllCars() async {
     final Database db = await database;
     final List<Map<String, dynamic>> rows =
         await db.query(tableCars, orderBy: 'id DESC');
-    return rows.map(Car.fromMap).toList();
+    final List<Car> cars = rows.map(Car.fromMap).toList();
+    return _migrateCarImagePaths(cars);
+  }
+
+  /// Mutlak iOS yollarını göreli `car_images/…` formuna çevirir.
+  Future<List<Car>> _migrateCarImagePaths(List<Car> cars) async {
+    final List<Car> out = <Car>[];
+    for (final Car car in cars) {
+      final String? stored = car.imagePath;
+      if (stored == null || stored.isEmpty || car.id == null) {
+        out.add(car);
+        continue;
+      }
+      final String? resolved =
+          await ImageStorageService.instance.resolvePath(stored);
+      if (resolved == null) {
+        out.add(car);
+        continue;
+      }
+      final String relative =
+          ImageStorageService.instance.toRelative(resolved);
+      if (relative == stored) {
+        out.add(car);
+        continue;
+      }
+      final Car updated = car.copyWith(imagePath: relative);
+      await updateCar(updated);
+      out.add(updated);
+    }
+    return out;
   }
 
   Future<Car?> getCarById(int id) async {

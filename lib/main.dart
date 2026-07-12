@@ -12,6 +12,7 @@ import 'services/background_removal_service.dart';
 import 'services/distance_unit_controller.dart';
 import 'services/locale_controller.dart';
 import 'services/notification_service.dart';
+import 'services/onboarding_controller.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 
@@ -28,10 +29,10 @@ Future<void> main() async {
   await Supabase.initialize(url: url, publishableKey: key);
   await initializeDateFormatting('en_US');
   await initializeDateFormatting('tr_TR');
-  await initializeDateFormatting('es_ES');
   await ThemeController.instance.load();
   await LocaleController.instance.load();
   await DistanceUnitController.instance.load();
+  await OnboardingController.instance.load();
   await NotificationService.instance.init();
   unawaited(BackgroundRemovalService.instance.init());
   runApp(const CarDataApp());

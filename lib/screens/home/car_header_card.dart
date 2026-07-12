@@ -368,7 +368,9 @@ class _CarImage extends StatefulWidget {
 class _CarImageState extends State<_CarImage> {
   Uint8List? _normalized;
   bool _useFileFallback = false;
+  bool _isNetwork = false;
   int _loadGeneration = 0;
+  String? _resolvedPath;
 
   @override
   void initState() {
@@ -382,18 +384,58 @@ class _CarImageState extends State<_CarImage> {
     if (oldWidget.imagePath != widget.imagePath) {
       _normalized = null;
       _useFileFallback = false;
+      _isNetwork = false;
+      _resolvedPath = null;
       _load();
     }
   }
 
   Future<void> _load() async {
-    final String? path = widget.imagePath;
-    if (path == null || path.isEmpty) return;
-    final File f = File(path);
+    final String? raw = widget.imagePath?.trim();
+    if (raw == null || raw.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _resolvedPath = null;
+        _isNetwork = false;
+        _normalized = null;
+        _useFileFallback = false;
+      });
+      return;
+    }
+
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      if (!mounted) return;
+      setState(() {
+        _resolvedPath = raw;
+        _isNetwork = true;
+        _normalized = null;
+        _useFileFallback = false;
+      });
+      return;
+    }
+
+    final String? resolved =
+        await ImageStorageService.instance.resolvePath(raw);
+    if (!mounted) return;
+    if (resolved == null || resolved.isEmpty) {
+      setState(() {
+        _resolvedPath = null;
+        _isNetwork = false;
+        _normalized = null;
+        _useFileFallback = false;
+      });
+      return;
+    }
+    setState(() {
+      _resolvedPath = resolved;
+      _isNetwork = false;
+    });
+    final File f = File(resolved);
     if (!await f.exists()) return;
     final int gen = ++_loadGeneration;
     try {
-      final Uint8List bytes = await _CarHeroImageCache.normalizedForPath(path);
+      final Uint8List bytes =
+          await _CarHeroImageCache.normalizedForPath(resolved);
       if (!mounted || gen != _loadGeneration) return;
       setState(() {
         _normalized = bytes;
@@ -415,12 +457,32 @@ class _CarImageState extends State<_CarImage> {
 
   @override
   Widget build(BuildContext context) {
-    final String? path = widget.imagePath;
+    final String? path = _resolvedPath;
     final double? sh = widget.slotHeight;
 
-    if (path == null ||
-        path.isEmpty ||
-        !File(path).existsSync()) {
+    if (path == null || path.isEmpty) {
+      return Icon(
+        Icons.directions_car,
+        size: _placeholderIconSize,
+        color: Colors.white.withValues(alpha: 0.5),
+      );
+    }
+
+    if (_isNetwork) {
+      return Image.network(
+        path,
+        height: sh,
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+        errorBuilder: (_, _, _) => Icon(
+          Icons.directions_car,
+          size: _placeholderIconSize,
+          color: Colors.white.withValues(alpha: 0.5),
+        ),
+      );
+    }
+
+    if (!File(path).existsSync()) {
       return Icon(
         Icons.directions_car,
         size: _placeholderIconSize,

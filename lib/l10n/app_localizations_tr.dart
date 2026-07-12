@@ -9,7 +9,7 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
-  String get appTitle => 'Garaj';
+  String get appTitle => 'MyGaraj';
 
   @override
   String get navMyCars => 'Araçlarım';
@@ -101,7 +101,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationsSubtitle =>
-      'Hatırlatıcı tarihinden 7 gün önce bildirim gönderilir.';
+      'Hatırlatıcıya 15, 7 ve 1 gün kala bildirim gönderilir.';
 
   @override
   String get versionLabel => 'Sürüm';
@@ -121,6 +121,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get maintenanceHistory => 'Bakım geçmişi';
+
+  @override
+  String get maintenanceHistorySubtitle =>
+      'Yapılan tüm servis işlemlerini görüntüle';
 
   @override
   String get seeAll => 'Tümünü gör';
@@ -166,14 +170,16 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get allUpToDate => 'Hepsi güncel';
+  String get allUpToDate => 'Hatırlatıcılar';
 
   @override
-  String get noUpcomingReminders =>
-      'Bu araç için yaklaşan bir hatırlatıcı yok.';
+  String get noUpcomingReminders => 'Yaklaşan bir hatırlatıcı yok';
 
   @override
   String get add => 'Ekle';
+
+  @override
+  String get addNew => 'Yeni ekle';
 
   @override
   String get expired => 'Süresi doldu';
@@ -221,11 +227,26 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get welcomeTitle => 'Garajın tek bir yerde';
+
+  @override
+  String get welcomeSubtitle =>
+      'Tüm araçların için bakım, kilometre ve hatırlatmaları takip et.';
+
+  @override
+  String get welcomeGetStarted => 'Başla';
+
+  @override
+  String get welcomeSwipeHint => 'Giriş için kaydırın';
+
+  @override
+  String get welcomeCreateAccount => 'Hesap oluştur';
+
+  @override
   String get loginTitle => 'Giriş yap';
 
   @override
-  String get loginSubtitle =>
-      'Giriş Supabase Authentication ile yapılır. Verileriniz isteğe bağlı olarak sunucuya taşınana kadar araç kayıtları bu cihazda kalır.';
+  String get loginSubtitle => 'Tekrar hoş geldin — kaldığın yerden devam et.';
 
   @override
   String get emailLabel => 'E-posta';
@@ -287,8 +308,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get registerTitle => 'Hesap oluştur';
 
   @override
-  String get registerSubtitle =>
-      'Kayıt Supabase ile oluşturulur. Adınızı isteğe bağlı olarak profilde gösterebilirsiniz.';
+  String get registerSubtitle => 'Birkaç saniyede hesabını oluştur.';
 
   @override
   String get displayNameLabel => 'Ad Soyad (isteğe bağlı)';
@@ -659,6 +679,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get editReminder => 'Hatırlatıcıyı düzenle';
+
+  @override
+  String reminderTypeAlreadyExists(String type) {
+    return '$type bu araç için zaten ekli.';
+  }
+
+  @override
+  String get reminderAllTypesExist =>
+      'Bu araç için tüm hatırlatıcı türleri zaten ekli.';
 
   @override
   String get expiryDateLabel => 'Bitiş tarihi';

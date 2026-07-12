@@ -11,6 +11,7 @@ import '../data/car_catalog.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/car_model.dart';
 import '../repositories/car_repository.dart';
+import '../repositories/supabase_car_repository.dart';
 import '../services/background_removal_service.dart';
 import '../services/distance_unit_controller.dart';
 import '../services/image_storage_service.dart';
@@ -38,7 +39,7 @@ class AddCarScreen extends StatefulWidget {
 
 class _AddCarScreenState extends State<AddCarScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final CarRepository _repo = SqliteCarRepository();
+  final CarRepository _repo = SupabaseCarRepository();
 
   late final TextEditingController _plaka;
   // Marka katalogda yoksa kullanıcının elle girmesi için.
@@ -55,8 +56,11 @@ class _AddCarScreenState extends State<AddCarScreen> {
   bool _saving = false;
   DistanceUnit _distanceUnit = DistanceUnitController.instance.value;
 
-  /// Mevcut araçtan gelen fotoğraf yolu (DB'de kayıtlı).
+  /// Mevcut araçtan gelen fotoğraf yolu (DB'de kayıtlı, göreli veya eski mutlak).
   String? _existingImagePath;
+
+  /// Önizleme için çözülmüş mutlak yol.
+  String? _resolvedExistingAbsolute;
 
   /// Bu oturumda image_picker ile seçilmiş ama henüz kaydedilmemiş fotoğraf.
   /// Kalıcı dizine ancak "Kaydet"e basınca kopyalanır.
@@ -126,6 +130,33 @@ class _AddCarScreenState extends State<AddCarScreen> {
       _selectedYear = c.yil;
     }
     DistanceUnitController.instance.addListener(_onDistanceUnitChanged);
+    _resolveExistingImage();
+    // Eski "Petrol" kaydını yerelleştirilmiş Benzin’e çevir (çift seçenek olmasın).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final String? normalized = normalizeFuelType(_selectedFuel, context.l10n);
+      if (normalized != _selectedFuel) {
+        setState(() => _selectedFuel = normalized);
+      }
+    });
+  }
+
+  Future<void> _resolveExistingImage() async {
+    final String? raw = _existingImagePath?.trim();
+    if (raw == null || raw.isEmpty) {
+      if (!mounted) return;
+      setState(() => _resolvedExistingAbsolute = null);
+      return;
+    }
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      if (!mounted) return;
+      setState(() => _resolvedExistingAbsolute = raw);
+      return;
+    }
+    final String? resolved =
+        await ImageStorageService.instance.resolvePath(raw);
+    if (!mounted) return;
+    setState(() => _resolvedExistingAbsolute = resolved);
   }
 
   void _onDistanceUnitChanged() {
@@ -159,7 +190,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   List<String> _fuelItems(AppLocalizations l10n) {
     final List<String> list = List<String>.from(localizedFuelOptions(l10n));
-    final String? f = _selectedFuel;
+    final String? f = normalizeFuelType(_selectedFuel, l10n);
     if (f != null && f.isNotEmpty && !list.contains(f)) {
       list.insert(0, f);
     }
@@ -320,7 +351,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
   Future<void> _showImagePickerSheet() async {
     final AppLocalizations l10n = context.l10n;
     final bool hasImage = _pickedImage != null ||
-        (!_imageCleared && (_existingImagePath?.isNotEmpty ?? false));
+        (!_imageCleared &&
+            (_resolvedExistingAbsolute?.isNotEmpty ?? false));
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -446,6 +478,16 @@ class _AddCarScreenState extends State<AddCarScreen> {
       } else if (_imageCleared) {
         await ImageStorageService.instance.deleteIfExists(_existingImagePath);
         finalImagePath = null;
+      } else if (finalImagePath != null &&
+          finalImagePath.isNotEmpty &&
+          !ImageStorageService.isRemoteUrl(finalImagePath)) {
+        // Eski mutlak yolu göreli forma çevir (HTTP URL'lere dokunma).
+        final String? resolved =
+            await ImageStorageService.instance.resolvePath(finalImagePath);
+        if (resolved != null) {
+          finalImagePath =
+              ImageStorageService.instance.toRelative(resolved);
+        }
       }
 
       final Car car = Car(
@@ -608,9 +650,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
       return FileImage(File(_pickedImage!.path));
     }
     if (!_imageCleared &&
-        (_existingImagePath?.isNotEmpty ?? false) &&
-        File(_existingImagePath!).existsSync()) {
-      return FileImage(File(_existingImagePath!));
+        (_resolvedExistingAbsolute?.isNotEmpty ?? false)) {
+      final String path = _resolvedExistingAbsolute!;
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        return NetworkImage(path);
+      }
+      if (File(path).existsSync()) {
+        return FileImage(File(path));
+      }
     }
     return null;
   }

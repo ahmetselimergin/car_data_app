@@ -12,6 +12,7 @@ Admin paneli (`admin_desktop`) marka, model, araç, tamirhane, sigorta ve **giri
    - `supabase/migrations/20260710000002_auth_rls_and_owner_uid.sql`
    - `supabase/migrations/20260710000003_profiles_username.sql`
    - `supabase/migrations/20260710000004_user_types.sql`
+   - `supabase/migrations/20260710000005_garage_cars_owner_rls.sql`
 
 3. Authentication → Users: **kendi e-postan** ile kullanıcı oluştur (şifreyi sen belirle).
 4. SQL ile admin yap:
@@ -51,7 +52,8 @@ Seed dosyası: `supabase/data/catalog-seed.json`
 | Marka / model / araç / tamirhane / sigorta | Supabase Postgres |
 | Kullanıcı listesi / tip | `profiles` (RLS: admin) |
 | Kullanıcı ekle / sil | Edge Function `admin-users` (service role) |
-| Marka logoları | Storage `brand-logos` |
+| Marka logoları | `brands.logo_url` (seed: car-logos-dataset PNG) + Storage `brand-logos` (manuel yükleme) |
+| Mobil logolar | `assets/brand_logos/` (aynı set, offline) |
 
 RLS: katalog yazma `admin`; tamirhane/sigorta `admin` + `partner_user`. Mobil kayıtlar `normal_user`.
 

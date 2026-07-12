@@ -201,3 +201,34 @@ List<String> localizedFuelOptions(AppLocalizations l10n) => <String>[
       l10n.fuelPlugInHybrid,
       l10n.fuelElectric,
     ];
+
+/// Eski "Petrol" / dil farkı kayıtlarını güncel Benzin etiketine çevirir.
+String? normalizeFuelType(String? raw, AppLocalizations l10n) {
+  if (raw == null) return null;
+  final String t = raw.trim();
+  if (t.isEmpty) return null;
+  final String lower = t.toLowerCase();
+  if (lower == 'petrol' ||
+      lower == 'benzin' ||
+      lower == 'gasolina' ||
+      lower == 'gasoline') {
+    return l10n.fuelPetrol;
+  }
+  if (lower == 'diesel' || lower == 'dizel' || lower == 'diésel') {
+    return l10n.fuelDiesel;
+  }
+  if (lower == 'lpg' || lower == 'glp') return l10n.fuelLpg;
+  if (lower == 'hybrid' || lower == 'hibrit' || lower == 'híbrido') {
+    return l10n.fuelHybrid;
+  }
+  if (lower.contains('plug') || lower.contains('enchufable')) {
+    return l10n.fuelPlugInHybrid;
+  }
+  if (lower == 'electric' ||
+      lower == 'elektrik' ||
+      lower == 'eléctrico' ||
+      lower == 'electrico') {
+    return l10n.fuelElectric;
+  }
+  return t;
+}
