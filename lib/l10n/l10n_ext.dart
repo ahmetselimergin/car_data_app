@@ -23,6 +23,8 @@ extension ReminderTypeL10n on ReminderType {
         return l10n.reminderTypeInspection;
       case ReminderType.egzoz:
         return l10n.reminderTypeEmissions;
+      case ReminderType.bakimKm:
+        return l10n.reminderTypeServiceKm;
     }
   }
 }
@@ -163,6 +165,24 @@ String humanizeRemaining(AppLocalizations l10n, DateTime date) {
   if (diff == 0) return l10n.lastDayToday;
   if (diff == 1) return l10n.lastDayTomorrow;
   return l10n.daysRemaining(diff);
+}
+
+
+String humanizeReminder(
+  Reminder r,
+  AppLocalizations l10n, {
+  required int currentKm,
+  required String localeTag,
+}) {
+  if (r.isKmBased) {
+    final int? remaining = DateHelper.kmRemaining(r, currentKm);
+    if (remaining == null) return l10n.reminderTypeServiceKm;
+    if (remaining <= 0) return l10n.kmOverdueCount(remaining.abs());
+    return l10n.kmRemainingCount(remaining);
+  }
+  final DateTime? date = r.bitisTarihi;
+  if (date == null) return r.tur.localizedLabel(l10n);
+  return '${DateHelper.formatLong(date, localeTag)} · ${humanizeRemaining(l10n, date)}';
 }
 
 String localeTagFor(Locale? locale) {

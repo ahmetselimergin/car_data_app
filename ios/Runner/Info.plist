@@ -10,6 +10,8 @@
 	<string>Aracınızın fotoğrafını seçmek için fotoğraflara erişim gerekiyor.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Aracınızın fotoğrafını kaydetmek için fotoğraflara erişim gerekiyor.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>En yakın tamircileri haritada göstermek için konumunuza erişim gerekiyor.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Bu uygulama mikrofona erişmez.</string>
 	<key>CFBundleDevelopmentRegion</key>

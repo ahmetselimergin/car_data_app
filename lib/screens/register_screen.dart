@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/l10n_ext.dart';
 import '../services/session_controller.dart';
 import '../theme/app_theme.dart';
+import '../utils/user_facing_error.dart';
 import 'auth_widgets.dart';
 
 /// Soft UI kayıt (MyGaraj).
@@ -60,6 +61,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.passwordsDoNotMatch)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(userFacingError(e, context.l10n))),
         );
       }
     } finally {

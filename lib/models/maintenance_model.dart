@@ -17,6 +17,9 @@ class Maintenance {
   /// Checkbox ile seçilen bakım kalemi id'leri (JSON olarak saklanır).
   final List<String> bakimKalemleri;
 
+  /// Fatura / fiş / poliçe görseli veya PDF (Supabase public URL).
+  final String? attachmentUrl;
+
   /// Resmi yetkili serviste yapıldı.
   final bool resmiServis;
 
@@ -39,6 +42,7 @@ class Maintenance {
     this.servisAdi,
     this.notlar,
     this.bakimKalemleri = const <String>[],
+    this.attachmentUrl,
     this.resmiServis = false,
     this.garantiKapsaminda = false,
     this.faturaAlindi = false,
@@ -51,6 +55,9 @@ class Maintenance {
       faturaAlindi ||
       sigortaKarsiladi;
 
+  bool get hasAttachment =>
+      attachmentUrl != null && attachmentUrl!.trim().isNotEmpty;
+
   Maintenance copyWith({
     int? id,
     int? carId,
@@ -61,10 +68,12 @@ class Maintenance {
     String? servisAdi,
     String? notlar,
     List<String>? bakimKalemleri,
+    String? attachmentUrl,
     bool? resmiServis,
     bool? garantiKapsaminda,
     bool? faturaAlindi,
     bool? sigortaKarsiladi,
+    bool clearAttachmentUrl = false,
   }) {
     return Maintenance(
       id: id ?? this.id,
@@ -76,6 +85,9 @@ class Maintenance {
       servisAdi: servisAdi ?? this.servisAdi,
       notlar: notlar ?? this.notlar,
       bakimKalemleri: bakimKalemleri ?? this.bakimKalemleri,
+      attachmentUrl: clearAttachmentUrl
+          ? null
+          : (attachmentUrl ?? this.attachmentUrl),
       resmiServis: resmiServis ?? this.resmiServis,
       garantiKapsaminda: garantiKapsaminda ?? this.garantiKapsaminda,
       faturaAlindi: faturaAlindi ?? this.faturaAlindi,
@@ -94,6 +106,7 @@ class Maintenance {
       'servisAdi': servisAdi,
       'notlar': notlar,
       'bakimKalemleri': MaintenanceItemCatalog.encodeIds(bakimKalemleri),
+      'attachmentUrl': attachmentUrl,
       'resmiServis': resmiServis ? 1 : 0,
       'garantiKapsaminda': garantiKapsaminda ? 1 : 0,
       'faturaAlindi': faturaAlindi ? 1 : 0,
@@ -114,6 +127,7 @@ class Maintenance {
       bakimKalemleri: MaintenanceItemCatalog.decodeIds(
         map['bakimKalemleri'] as String?,
       ),
+      attachmentUrl: map['attachmentUrl'] as String?,
       resmiServis: (map['resmiServis'] as int?) == 1,
       garantiKapsaminda: (map['garantiKapsaminda'] as int?) == 1,
       faturaAlindi: (map['faturaAlindi'] as int?) == 1,

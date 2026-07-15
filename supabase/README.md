@@ -13,6 +13,21 @@ Admin paneli (`admin_desktop`) marka, model, araç, tamirhane, sigorta ve **giri
    - `supabase/migrations/20260710000003_profiles_username.sql`
    - `supabase/migrations/20260710000004_user_types.sql`
    - `supabase/migrations/20260710000005_garage_cars_owner_rls.sql`
+   - `supabase/migrations/20260710000006_car_images_storage.sql`
+   - `supabase/migrations/20260710000007_card_color_bigint.sql`
+   - `supabase/migrations/20260710000008_garage_reminders_maintenance.sql`
+   - `supabase/migrations/20260710000009_km_reminders_and_docs.sql`
+   - `supabase/migrations/20260714000000_workshops_public_read.sql`
+   - `supabase/migrations/20260714000001_workshops_geo.sql`
+   - `supabase/migrations/20260714000002_workshops_city.sql`
+
+   Ardından Euro Repar servis noktaları için (opsiyonel):
+
+   ```bash
+   python3 supabase/scripts/scrape_euro_repar.py   # workshops_euro_repar.sql üretir
+   ```
+
+   Üretilen `workshops_euro_repar.sql`'i SQL Editor'de çalıştır (idempotent).
 
 3. Authentication → Users: **kendi e-postan** ile kullanıcı oluştur (şifreyi sen belirle).
 4. SQL ile admin yap:

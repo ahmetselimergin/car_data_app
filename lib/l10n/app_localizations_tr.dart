@@ -222,9 +222,40 @@ class AppLocalizationsTr extends AppLocalizations {
       'Henüz hatırlatıcı yok. Bir araca girip sigorta, kasko, muayene veya egzoz tarihi ekle.';
 
   @override
+  String get goToGarage => 'Garaja git';
+
+  @override
   String genericError(String error) {
     return 'Hata: $error';
   }
+
+  @override
+  String get somethingWentWrong => 'Bir şeyler ters gitti';
+
+  @override
+  String get tryAgain => 'Tekrar dene';
+
+  @override
+  String get loadFailedHint =>
+      'Veriler yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+
+  @override
+  String get saveFailedFriendly => 'Kaydedilemedi. Lütfen tekrar dene.';
+
+  @override
+  String get deleteFailedFriendly => 'Silinemedi. Lütfen tekrar dene.';
+
+  @override
+  String get signInRequired => 'Bu işlem için giriş yapmış olmalısın.';
+
+  @override
+  String get photoNotFoundFriendly => 'Araç fotoğrafı bulunamadı.';
+
+  @override
+  String get reminderTypeLabel => 'Tür';
+
+  @override
+  String get deleteMaintenanceMessage => 'Bu bakım kaydı silinsin mi?';
 
   @override
   String get welcomeTitle => 'Garajın tek bir yerde';
@@ -557,7 +588,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get maintenanceEmpty =>
-      'Henüz bakım kaydı yok.\nİlk bakımı eklemek için + tuşuna bas.';
+      'Yağ değişimi, lastik ve diğer işlemleri buraya kaydet.';
 
   @override
   String get deleteTooltip => 'Sil';
@@ -570,6 +601,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get newMaintenanceEntry => 'Yeni bakım kaydı';
+
+  @override
+  String get editMaintenanceEntry => 'Bakım kaydını düzenle';
+
+  @override
+  String get editAction => 'Düzenle';
 
   @override
   String get titleOptional => 'Başlık (isteğe bağlı)';
@@ -654,7 +691,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get maintenanceLogTooltip => 'Bakım günlüğü';
 
   @override
-  String get remindersEmptyTitle => 'Henüz hatırlatıcı eklenmemiş.';
+  String get remindersEmptyTitle => 'Henüz hatırlatıcı yok';
 
   @override
   String get remindersEmptySubtitle =>
@@ -706,6 +743,49 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reminderTypeEmissions => 'Egzoz';
+
+  @override
+  String get reminderTypeServiceKm => 'Bakım (km)';
+
+  @override
+  String get targetKmLabel => 'Hedef kilometre';
+
+  @override
+  String get targetKmHint => 'Örn. 150000';
+
+  @override
+  String get targetKmRequired => 'Hedef kilometre gerekli';
+
+  @override
+  String kmRemainingCount(int km) {
+    return '$km km kaldı';
+  }
+
+  @override
+  String kmOverdueCount(int km) {
+    return '$km km geçti';
+  }
+
+  @override
+  String get addAttachment => 'Ek ekle';
+
+  @override
+  String get changeAttachment => 'Eki değiştir';
+
+  @override
+  String get removeAttachment => 'Eki kaldır';
+
+  @override
+  String get attachmentLabel => 'Ek (fiş / fatura)';
+
+  @override
+  String get openAttachment => 'Eki aç';
+
+  @override
+  String get homeWidgetTitle => 'Yaklaşanlar';
+
+  @override
+  String get homeWidgetEmpty => 'Yaklaşan hatırlatıcı yok';
 
   @override
   String get statusExpired => 'Süresi Dolmuş';

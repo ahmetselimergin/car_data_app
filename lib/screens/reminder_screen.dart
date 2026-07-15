@@ -5,9 +5,13 @@ import '../l10n/l10n_ext.dart';
 import '../models/car_model.dart';
 import '../models/reminder_model.dart';
 import '../repositories/reminder_repository.dart';
+import '../repositories/supabase_reminder_repository.dart';
 import '../services/date_helper.dart';
 import '../services/notification_service.dart';
 import '../theme/car_card_palette.dart';
+import '../utils/user_facing_error.dart';
+import '../widgets/app_confirm_dialog.dart';
+import '../widgets/load_error_view.dart';
 import '../widgets/undraw_empty_state.dart';
 import 'maintenance_screen.dart';
 
@@ -21,6 +25,8 @@ IconData _iconForReminderType(ReminderType t) {
       return Icons.fact_check_outlined;
     case ReminderType.egzoz:
       return Icons.air;
+    case ReminderType.bakimKm:
+      return Icons.speed_outlined;
   }
 }
 
@@ -34,7 +40,7 @@ class ReminderScreen extends StatefulWidget {
 }
 
 class _ReminderScreenState extends State<ReminderScreen> {
-  final ReminderRepository _repo = SqliteReminderRepository();
+  final ReminderRepository _repo = SupabaseReminderRepository();
   late Future<List<Reminder>> _future;
   bool _didChange = false;
 
@@ -56,88 +62,104 @@ class _ReminderScreenState extends State<ReminderScreen> {
   }
 
   Future<void> _addOrEditReminder({Reminder? existing}) async {
-    final List<Reminder> current = await _load();
-    final Set<ReminderType> taken = current
-        .where((Reminder r) => existing == null || r.id != existing.id)
-        .map((Reminder r) => r.tur)
-        .toSet();
+    try {
+      final List<Reminder> current = await _load();
+      final Set<ReminderType> taken = current
+          .where((Reminder r) => existing == null || r.id != existing.id)
+          .map((Reminder r) => r.tur)
+          .toSet();
 
-    if (existing == null && taken.length >= ReminderType.values.length) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.reminderAllTypesExist)),
-      );
-      return;
-    }
-
-    final List<ReminderType> available = existing != null
-        ? <ReminderType>[existing.tur]
-        : ReminderType.values
-            .where((ReminderType t) => !taken.contains(t))
-            .toList();
-
-    if (available.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.reminderAllTypesExist)),
-      );
-      return;
-    }
-
-    if (!mounted) return;
-    final Reminder? saved = await showModalBottomSheet<Reminder>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: const Color(0xFFF7F8FA),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (_) => _ReminderEditor(
-        carId: widget.car.id!,
-        existing: existing,
-        availableTypes: available,
-      ),
-    );
-
-    if (saved == null) return;
-
-    if (existing == null) {
-      final List<Reminder> latest = await _load();
-      if (latest.any((Reminder r) => r.tur == saved.tur)) {
+      if (existing == null && taken.length >= ReminderType.values.length) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.l10n.reminderTypeAlreadyExists(
-                saved.tur.localizedLabel(context.l10n),
-              ),
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.reminderAllTypesExist)),
         );
         return;
       }
-      final int id = await _repo.addReminder(saved);
-      final Reminder withId = saved.copyWith(id: id);
-      await NotificationService.instance.scheduleReminder(
-        withId,
-        carLabel: '${widget.car.marka} ${widget.car.model} (${widget.car.plaka})',
+
+      final List<ReminderType> available = existing != null
+          ? <ReminderType>[existing.tur]
+          : ReminderType.values
+              .where((ReminderType t) => !taken.contains(t))
+              .toList();
+
+      if (available.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.reminderAllTypesExist)),
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      final Reminder? saved = await showModalBottomSheet<Reminder>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        backgroundColor: const Color(0xFFF7F8FA),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        builder: (_) => _ReminderEditor(
+          carId: widget.car.id!,
+          existing: existing,
+          availableTypes: available,
+        ),
       );
-    } else {
-      await _repo.updateReminder(saved);
-      await NotificationService.instance.scheduleReminder(
-        saved,
-        carLabel: '${widget.car.marka} ${widget.car.model} (${widget.car.plaka})',
+
+      if (saved == null) return;
+
+      if (existing == null) {
+        final List<Reminder> latest = await _load();
+        if (latest.any((Reminder r) => r.tur == saved.tur)) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.l10n.reminderTypeAlreadyExists(
+                  saved.tur.localizedLabel(context.l10n),
+                ),
+              ),
+            ),
+          );
+          return;
+        }
+        final int id = await _repo.addReminder(saved);
+        final Reminder withId = saved.copyWith(id: id);
+        await NotificationService.instance.scheduleReminder(
+          withId,
+          carLabel:
+              '${widget.car.marka} ${widget.car.model} (${widget.car.plaka})',
+        );
+      } else {
+        await _repo.updateReminder(saved);
+        await NotificationService.instance.scheduleReminder(
+          saved,
+          carLabel:
+              '${widget.car.marka} ${widget.car.model} (${widget.car.plaka})',
+        );
+      }
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(userFacingError(e, context.l10n))),
       );
     }
-    _refresh();
   }
 
   Future<void> _delete(Reminder r) async {
     if (r.id == null) return;
-    await _repo.deleteReminder(r.id!);
-    await NotificationService.instance.cancelReminder(r.id!);
-    _refresh();
+    try {
+      await _repo.deleteReminder(r.id!);
+      await NotificationService.instance.cancelReminder(r.id!);
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(userFacingError(e, context.l10n))),
+      );
+    }
   }
 
   @override
@@ -185,6 +207,9 @@ class _ReminderScreenState extends State<ReminderScreen> {
             if (snap.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
             }
+            if (snap.hasError) {
+              return LoadErrorView(onRetry: _refresh);
+            }
             final List<Reminder> items = snap.data ?? <Reminder>[];
             if (items.isEmpty) {
               final Color accent = CarCardPalette.resolve(
@@ -198,6 +223,11 @@ class _ReminderScreenState extends State<ReminderScreen> {
                   subtitle: l10n.remindersEmptySubtitle,
                   color: accent,
                   height: 190,
+                  action: FilledButton.icon(
+                    onPressed: () => _addOrEditReminder(),
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.addReminder),
+                  ),
                 ),
               );
             }
@@ -208,8 +238,10 @@ class _ReminderScreenState extends State<ReminderScreen> {
                   const SizedBox(height: 10),
               itemBuilder: (BuildContext c, int i) {
                 final Reminder r = items[i];
-                final ReminderStatus status =
-                    DateHelper.statusFor(r.bitisTarihi);
+                final ReminderStatus status = DateHelper.statusForReminder(
+                  r,
+                  currentKm: widget.car.km,
+                );
                 final Color color = DateHelper.colorFor(status);
                 return Dismissible(
                   key: ValueKey<int>(r.id ?? i),
@@ -224,61 +256,16 @@ class _ReminderScreenState extends State<ReminderScreen> {
                   ),
                   direction: DismissDirection.endToStart,
                   confirmDismiss: (_) async {
-                    return await showDialog<bool>(
-                          context: context,
-                          builder: (BuildContext c) => AlertDialog(
-                            title: Text(l10n.delete),
-                            content: Text(
-                              l10n.deleteReminderMessage(
-                                r.tur.localizedLabel(l10n),
-                              ),
-                            ),
-                            actionsPadding: const EdgeInsets.fromLTRB(
-                              16,
-                              0,
-                              16,
-                              16,
-                            ),
-                            actions: <Widget>[
-                              Row(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () =>
-                                          Navigator.pop(c, false),
-                                      icon: const Icon(
-                                        Icons.close_rounded,
-                                        size: 18,
-                                      ),
-                                      label: Text(l10n.dismiss),
-                                      style: OutlinedButton.styleFrom(
-                                        minimumSize:
-                                            const Size.fromHeight(48),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: FilledButton.icon(
-                                      onPressed: () =>
-                                          Navigator.pop(c, true),
-                                      icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 18,
-                                      ),
-                                      label: Text(l10n.delete),
-                                      style: FilledButton.styleFrom(
-                                        minimumSize:
-                                            const Size.fromHeight(48),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ) ??
-                        false;
+                    return showAppConfirmDialog(
+                      context: context,
+                      title: l10n.delete,
+                      message: l10n.deleteReminderMessage(
+                        r.tur.localizedLabel(l10n),
+                      ),
+                      confirmLabel: l10n.delete,
+                      destructive: true,
+                      confirmIcon: Icons.delete_outline_rounded,
+                    );
                   },
                   onDismissed: (_) => _delete(r),
                   child: Card(
@@ -301,8 +288,8 @@ class _ReminderScreenState extends State<ReminderScreen> {
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       subtitle: Text(
-                        '${DateHelper.formatLong(r.bitisTarihi, localeTag)}\n'
-                        '${humanizeRemaining(l10n, r.bitisTarihi)} • ${status.localizedLabel(l10n)}',
+                        '${humanizeReminder(r, l10n, currentKm: widget.car.km, localeTag: localeTag)}\n'
+                        '${status.localizedLabel(l10n)}',
                         style: TextStyle(color: color),
                       ),
                       isThreeLine: true,
@@ -338,12 +325,23 @@ class _ReminderEditor extends StatefulWidget {
 class _ReminderEditorState extends State<_ReminderEditor> {
   late ReminderType _tur;
   DateTime? _date;
+  late final TextEditingController _targetKm;
+
+  bool get _isKm => _tur.isKmBased;
 
   @override
   void initState() {
     super.initState();
     _tur = widget.existing?.tur ?? widget.availableTypes.first;
     _date = widget.existing?.bitisTarihi;
+    final int? km = widget.existing?.targetKm;
+    _targetKm = TextEditingController(text: km == null ? '' : '$km');
+  }
+
+  @override
+  void dispose() {
+    _targetKm.dispose();
+    super.dispose();
   }
 
   Future<void> _pickDate() async {
@@ -361,6 +359,25 @@ class _ReminderEditorState extends State<_ReminderEditor> {
   }
 
   void _submit() {
+    if (_isKm) {
+      final int? target = int.tryParse(_targetKm.text.trim().replaceAll('.', ''));
+      if (target == null || target <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.targetKmRequired)),
+        );
+        return;
+      }
+      final Reminder r = Reminder(
+        id: widget.existing?.id,
+        carId: widget.carId,
+        tur: _tur,
+        bitisTarihi: null,
+        targetKm: target,
+        hatirlatmaYapildiMi: widget.existing?.hatirlatmaYapildiMi ?? false,
+      );
+      Navigator.pop(context, r);
+      return;
+    }
     if (_date == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.expiryDateRequired)),
@@ -372,6 +389,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
       carId: widget.carId,
       tur: _tur,
       bitisTarihi: _date!,
+      targetKm: null,
       hatirlatmaYapildiMi: widget.existing?.hatirlatmaYapildiMi ?? false,
     );
     Navigator.pop(context, r);
@@ -386,8 +404,6 @@ class _ReminderEditorState extends State<_ReminderEditor> {
     final Color? statusColor =
         status == null ? null : DateHelper.colorFor(status);
     final bool locked = widget.existing != null;
-    final bool isTr =
-        Localizations.localeOf(context).languageCode == 'tr';
 
     return Padding(
       padding: EdgeInsets.only(
@@ -448,7 +464,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
           ),
           const SizedBox(height: 22),
           Text(
-            isTr ? 'Tür' : 'Type',
+            l10n.reminderTypeLabel,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -464,13 +480,20 @@ class _ReminderEditorState extends State<_ReminderEditor> {
               return Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: locked ? null : () => setState(() => _tur = t),
+                  onTap: locked
+                      ? null
+                      : () => setState(() {
+                            _tur = t;
+                            if (t.isKmBased) {
+                              _date = null;
+                            }
+                          }),
                   borderRadius: BorderRadius.circular(18),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOutCubic,
-                    width: 104,
-                    height: 88,
+                    width: 110,
+                    height: 92,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -496,7 +519,7 @@ class _ReminderEditorState extends State<_ReminderEditor> {
                         Text(
                           t.localizedLabel(l10n),
                           textAlign: TextAlign.center,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
@@ -515,116 +538,148 @@ class _ReminderEditorState extends State<_ReminderEditor> {
             }).toList(),
           ),
           const SizedBox(height: 22),
-          Text(
-            l10n.expiryDateLabel,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.black.withValues(alpha: 0.45),
+          if (_isKm) ...<Widget>[
+            Text(
+              l10n.targetKmLabel,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.black.withValues(alpha: 0.45),
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: _pickDate,
-              borderRadius: BorderRadius.circular(20),
-              child: Ink(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
+            const SizedBox(height: 10),
+            TextField(
+              controller: _targetKm,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: l10n.targetKmHint,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: statusColor?.withValues(alpha: 0.55) ??
-                        const Color(0xFFE4E4E7),
-                    width: status != null ? 1.5 : 1,
-                  ),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                  borderSide: const BorderSide(color: Color(0xFFE4E4E7)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: const BorderSide(color: Color(0xFFE4E4E7)),
+                ),
+                prefixIcon: const Icon(Icons.speed_outlined),
+              ),
+            ),
+          ] else ...<Widget>[
+            Text(
+              l10n.expiryDateLabel,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.black.withValues(alpha: 0.45),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _pickDate,
+                borderRadius: BorderRadius.circular(20),
+                child: Ink(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: statusColor?.withValues(alpha: 0.55) ??
+                          const Color(0xFFE4E4E7),
+                      width: status != null ? 1.5 : 1,
                     ),
-                  ],
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4F4F5),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.calendar_month_rounded,
+                          color: Color(0xFF18181B),
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              l10n.expiryDateLabel,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              _date == null
+                                  ? l10n.dateNotSelected
+                                  : DateHelper.formatLong(_date!, localeTag),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: _date == null
+                                    ? const Color(0xFFA1A1AA)
+                                    : const Color(0xFF18181B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.black.withValues(alpha: 0.28),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (status != null && statusColor != null) ...<Widget>[
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: <Widget>[
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF4F4F5),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(
-                        Icons.calendar_month_rounded,
-                        color: Color(0xFF18181B),
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
+                    Icon(DateHelper.iconFor(status),
+                        color: statusColor, size: 18),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            l10n.expiryDateLabel,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black.withValues(alpha: 0.4),
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            _date == null
-                                ? l10n.dateNotSelected
-                                : DateHelper.formatLong(_date!, localeTag),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: _date == null
-                                  ? const Color(0xFFA1A1AA)
-                                  : const Color(0xFF18181B),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        '${status.localizedLabel(l10n)} · ${humanizeRemaining(l10n, _date!)}',
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.black.withValues(alpha: 0.28),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          if (status != null && statusColor != null) ...<Widget>[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: <Widget>[
-                  Icon(DateHelper.iconFor(status), color: statusColor, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${status.localizedLabel(l10n)} · ${humanizeRemaining(l10n, _date!)}',
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ],
           const SizedBox(height: 26),
           SizedBox(

@@ -4,9 +4,13 @@ class _AllRemindersTab extends StatelessWidget {
   const _AllRemindersTab({
     required this.future,
     required this.cachedGarage,
+    required this.onGoToGarage,
+    required this.onRefresh,
   });
   final Future<_GarageData> future;
   final _GarageData? cachedGarage;
+  final VoidCallback onGoToGarage;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -20,13 +24,22 @@ class _AllRemindersTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError && effective == null) {
-          return Center(
-              child: Text(context.l10n.genericError(snap.error.toString())));
+          return LoadErrorView(onRetry: onRefresh);
         }
         final _GarageData data = effective!;
         final List<Reminder> reminders = List<Reminder>.of(data.reminders)
-          ..sort((Reminder a, Reminder b) =>
-              a.bitisTarihi.compareTo(b.bitisTarihi));
+          ..sort((Reminder a, Reminder b) {
+            final DateTime? da = a.bitisTarihi;
+            final DateTime? db = b.bitisTarihi;
+            if (da == null && db == null) {
+              final int ka = a.targetKm ?? 1 << 30;
+              final int kb = b.targetKm ?? 1 << 30;
+              return ka.compareTo(kb);
+            }
+            if (da == null) return 1;
+            if (db == null) return -1;
+            return da.compareTo(db);
+          });
 
         return Column(
           children: <Widget>[
@@ -50,6 +63,11 @@ class _AllRemindersTab extends StatelessWidget {
                         title: context.l10n.remindersEmptyTitle,
                         subtitle: context.l10n.allRemindersEmpty,
                         height: 190,
+                        action: FilledButton.icon(
+                          onPressed: onGoToGarage,
+                          icon: const Icon(Icons.directions_car_outlined),
+                          label: Text(context.l10n.goToGarage),
+                        ),
                       ),
                     )
                   : ListView.separated(
@@ -90,7 +108,10 @@ class _ReminderFlatTile extends StatelessWidget {
     final AppLocalizations l10n = context.l10n;
     final String localeTag =
         localeTagFor(Localizations.localeOf(context));
-    final ReminderStatus status = DateHelper.statusFor(reminder.bitisTarihi);
+    final ReminderStatus status = DateHelper.statusForReminder(
+      reminder,
+      currentKm: car.km,
+    );
     final Color color = DateHelper.colorFor(status);
     return Container(
       decoration: BoxDecoration(
@@ -119,8 +140,12 @@ class _ReminderFlatTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  '${DateHelper.formatLong(reminder.bitisTarihi, localeTag)} • '
-                  '${humanizeRemaining(l10n, reminder.bitisTarihi)}',
+                  humanizeReminder(
+                    reminder,
+                    l10n,
+                    currentKm: car.km,
+                    localeTag: localeTag,
+                  ),
                   style: TextStyle(color: color, fontSize: 12),
                 ),
               ],

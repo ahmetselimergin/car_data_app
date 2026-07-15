@@ -4,7 +4,9 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../l10n/l10n_ext.dart';
+import '../models/car_model.dart';
 import '../models/reminder_model.dart';
+import 'date_helper.dart';
 import 'locale_controller.dart';
 
 class NotificationService {
@@ -20,6 +22,9 @@ class NotificationService {
 
   /// Bitiş tarihinden kaç gün önce bildirim (sistem tepsisi).
   static const List<int> alertOffsetsDays = <int>[15, 7, 1];
+
+  /// Km tabanlı uyarı eşikleri (kalan km).
+  static const List<int> kmAlertThresholds = <int>[500, 0];
 
   Future<void> init() async {
     if (_initialized) return;
@@ -70,7 +75,15 @@ class NotificationService {
   static int notificationIdFor(int reminderId, int daysBefore) =>
       reminderId * 100 + daysBefore;
 
+  /// Km bildirimi id: `reminderId * 1000 + (threshold + 1)`.
+  static int kmNotificationIdFor(int reminderId, int threshold) =>
+      reminderId * 1000 + (threshold + 1);
+
+  static String _kmDedupeKey(int reminderId, int threshold) =>
+      'km_notif_${reminderId}_$threshold';
+
   /// Hatırlatıcı için 15 / 7 / 1 gün kala saat 09:00 bildirimlerini planlar.
+  /// Km tabanlı veya bitiş tarihi yoksa planlanmaz (eski tarih bildirimleri iptal edilir).
   Future<void> scheduleReminder(
     Reminder reminder, {
     String carLabel = '',
@@ -83,6 +96,10 @@ class NotificationService {
 
     // Yeniden planlamadan önce eski 3 uyarıyı temizle.
     await cancelReminder(reminder.id!);
+
+    if (reminder.isKmBased || reminder.bitisTarihi == null) {
+      return;
+    }
 
     final AppLocalizations l10n =
         lookupAppLocalizations(LocaleController.resolve(null));
@@ -105,9 +122,10 @@ class NotificationService {
     );
 
     final DateTime now = DateTime.now();
+    final DateTime bitis = reminder.bitisTarihi!;
 
     for (final int daysBefore in alertOffsetsDays) {
-      final DateTime triggerLocal = reminder.bitisTarihi
+      final DateTime triggerLocal = bitis
           .subtract(Duration(days: daysBefore))
           .copyWith(
             hour: 9,
@@ -137,10 +155,74 @@ class NotificationService {
     }
   }
 
+  /// Km tabanlı hatırlatıcılar için anlık bildirim (eşik 500 / 0, prefs ile tek sefer).
+  Future<void> checkKmReminders({
+    required List<Reminder> reminders,
+    required Map<int, Car> carsById,
+  }) async {
+    await init();
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('notifications_enabled') ?? true)) return;
+
+    final AppLocalizations l10n =
+        lookupAppLocalizations(LocaleController.resolve(null));
+
+    final AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+      _channelId,
+      l10n.notificationChannelName,
+      channelDescription: l10n.notificationChannelDescription,
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
+    final NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    for (final Reminder r in reminders) {
+      if (r.id == null || !r.isKmBased || r.targetKm == null) continue;
+      final Car? car = carsById[r.carId];
+      if (car == null) continue;
+
+      final int? remaining = DateHelper.kmRemaining(r, car.km);
+      if (remaining == null) continue;
+
+      final String typeLabel = r.tur.localizedLabel(l10n);
+      final String carLabel = '${car.marka} ${car.model} (${car.plaka})';
+
+      for (final int threshold in kmAlertThresholds) {
+        if (remaining > threshold) continue;
+        final String key = _kmDedupeKey(r.id!, threshold);
+        if (prefs.getBool(key) ?? false) continue;
+
+        final String title = l10n.notificationTitle(typeLabel);
+        final String kmText = remaining <= 0
+            ? l10n.kmOverdueCount(remaining.abs())
+            : l10n.kmRemainingCount(remaining);
+        final String body = '$carLabel — $kmText';
+
+        await _plugin.show(
+          id: kmNotificationIdFor(r.id!, threshold),
+          title: title,
+          body: body,
+          notificationDetails: details,
+          payload: 'reminder_${r.id}_km$threshold',
+        );
+        await prefs.setBool(key, true);
+      }
+    }
+  }
+
   Future<void> cancelReminder(int reminderId) async {
     await init();
     for (final int daysBefore in alertOffsetsDays) {
       await _plugin.cancel(id: notificationIdFor(reminderId, daysBefore));
+    }
+    for (final int threshold in kmAlertThresholds) {
+      await _plugin.cancel(id: kmNotificationIdFor(reminderId, threshold));
     }
     // Eski tek-bildirim id’si (v1) varsa onu da temizle.
     await _plugin.cancel(id: reminderId);

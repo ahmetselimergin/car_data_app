@@ -1,0 +1,361 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link [ref=e5] [cursor=pointer]:
+        - /url: https://www.euroreparcarservice-tr.com
+        - img "Eurorepar Car Service" [ref=e6]
+      - paragraph [ref=e7]: Size en yakın noktayı bulun
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - textbox "Şehir veya Posta Kodu" [ref=e11]
+          - link "Size en yakın noktayı bulun":
+            - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html
+            - img "Size en yakın noktayı bulun" [ref=e12] [cursor=pointer]
+        - button "Konumumu bul" [ref=e13] [cursor=pointer]
+      - link "Üye Alanı" [ref=e15] [cursor=pointer]:
+        - /url: /account
+    - generic [ref=e16]:
+      - navigation [ref=e17]:
+        - button [ref=e18] [cursor=pointer]:
+          - paragraph [ref=e22]: Menü
+        - generic:
+          - textbox "Arama..." [ref=e25]
+          - list:
+            - listitem:
+              - link "Hakkımızda" [ref=e26] [cursor=pointer]:
+                - /url: https://www.euroreparcarservice-tr.com/eurorepar-car-service-nedir.html
+            - listitem:
+              - link "Hizmetler" [ref=e27] [cursor=pointer]:
+                - /url: https://www.euroreparcarservice-tr.com/hizmetler.html
+            - listitem:
+              - link "Kampanyalar" [ref=e28] [cursor=pointer]:
+                - /url: https://www.euroreparcarservice-tr.com/kampanyalar.html
+            - listitem:
+              - link "Servisler" [ref=e29] [cursor=pointer]:
+                - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html
+            - listitem:
+              - link "Haberler" [ref=e30] [cursor=pointer]:
+                - /url: https://www.euroreparcarservice-tr.com/haberler.html
+            - listitem:
+              - link "Blog" [ref=e31] [cursor=pointer]:
+                - /url: https://www.euroreparcarservice-tr.com/blog.html
+            - listitem:
+              - link "ÜYE GİRİŞİ" [ref=e32] [cursor=pointer]:
+                - /url: https://www.euroreparcarservice-tr.com/uye-girisi.html
+      - navigation [ref=e33]:
+        - link "Hakkımızda" [ref=e34] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/eurorepar-car-service-nedir.html
+        - link "Hizmetler" [ref=e35] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/hizmetler.html
+        - link "Kampanyalar" [ref=e36] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/kampanyalar.html
+        - link "Servisler" [ref=e37] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html
+        - link "Haberler" [ref=e38] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/haberler.html
+  - generic [ref=e39]:
+    - 'heading "EUROREPAR CAR SERVICE: BİR SERVİS BULUN & RANDEVU ALIN" [level=1] [ref=e40]'
+    - generic [ref=e41]:
+      - paragraph [ref=e42]:
+        - strong [ref=e43]: Sağlığınız Önceliğimizdir !
+      - paragraph [ref=e44]:
+        - strong [ref=e45]: Eurorepar Car Service
+        - text: noktalarımız araçlarını kullanması gereken herkesin ihtiyaçlarını karşılamaya devam etmektedir. Servislerimiz sizlerin ve ekiplerinin sağlığı için gerekli hijyen önlemlerini almaktadır. Herhangi bir acil ihtiyaç durumunda size en yakın
+        - strong [ref=e46]: Eurorepar Car Service
+        - text: noktasına telefonla ulaşabilirsiniz.
+  - generic [ref=e47]:
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - figure [ref=e50]:
+          - link [ref=e51] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-lts-otomotiv-afyonkarahisar-10667.html
+            - img "LTS Otomotiv" [ref=e52]
+          - paragraph [ref=e54]: A
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - link "LTS Otomotiv" [ref=e57] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-lts-otomotiv-afyonkarahisar-10667.html
+            - paragraph [ref=e58]: "Organize Sanayi Bölgesi 1.Cadde 4.Sokak No: 1 İç Kapı No: X Merkez"
+            - paragraph [ref=e59]: Afyonkarahisar 03030
+            - paragraph [ref=e60]: 25.7 km
+          - paragraph [ref=e61]: "Çalışma Saatleri: 08:00-18:30"
+      - generic [ref=e62]:
+        - figure [ref=e63]:
+          - link [ref=e64] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-gencler-otomotiv-ve-yedek-parca-afyon-12450.html
+            - img "Gençler Otomotiv ve Yedek Parça" [ref=e65]
+          - paragraph [ref=e67]: B
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - link "Gençler Otomotiv ve Yedek Parça" [ref=e70] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-gencler-otomotiv-ve-yedek-parca-afyon-12450.html
+            - paragraph [ref=e71]: Yenice Mah. 1241 Sok. No:15 Merkez Afyon
+            - paragraph [ref=e72]: Afyon 03030
+            - paragraph [ref=e73]: 27.7 km
+          - paragraph [ref=e74]: "Çalışma Saatleri: 08.45 - 18.00"
+      - generic [ref=e75]:
+        - figure [ref=e76]:
+          - link [ref=e77] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-kaya-oto-center-sandıklı-13853.html
+            - img "Kaya Oto Center" [ref=e78]
+          - paragraph [ref=e80]: C
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - link "Kaya Oto Center" [ref=e83] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-kaya-oto-center-sandıklı-13853.html
+            - paragraph [ref=e84]: Çakır Mah Fevzi Paşa Bulv. No106 Sandıklı Afyon
+            - paragraph [ref=e85]: Sandıklı 03510
+            - paragraph [ref=e86]: 72.5 km
+          - paragraph [ref=e87]: "Çalışma Saatleri: 08:00 - 19:00"
+      - generic [ref=e88]:
+        - figure [ref=e89]:
+          - link [ref=e90] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-bastas-otomotiv-kutahya-13802.html
+            - img "BASTAS OTOMOTIV" [ref=e91]
+          - paragraph [ref=e93]: D
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - link "BASTAS OTOMOTIV" [ref=e96] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-bastas-otomotiv-kutahya-13802.html
+            - paragraph [ref=e97]: INKOY MAH. ESKİSEHIR KARAYOLU BUL 3 KM NO 41
+            - paragraph [ref=e98]: KUTAHYA 43104
+            - paragraph [ref=e99]: 77.1 km
+          - paragraph [ref=e100]: "Çalışma Saatleri: 08:30 - 18:30"
+      - generic [ref=e101]:
+        - figure [ref=e102]:
+          - link [ref=e103] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-baykar-motorlu-araclar--kütahya-kütahya-10081.html
+            - img "Baykar Motorlu Araçlar - Kütahya" [ref=e104]
+          - paragraph [ref=e106]: E
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - link "Baykar Motorlu Araçlar - Kütahya" [ref=e109] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-baykar-motorlu-araclar--kütahya-kütahya-10081.html
+            - paragraph [ref=e110]: "Fuat Paşa Mah. Lalegül Sok. No: 12 Merkez"
+            - paragraph [ref=e111]: Kütahya 43030
+            - paragraph [ref=e112]: 78.1 km
+          - paragraph [ref=e113]: "Çalışma Saatleri: 08:00-18:00"
+      - generic [ref=e114]:
+        - figure [ref=e115]:
+          - link [ref=e116] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-baserturk-otomotiv-kutahya-13907.html
+            - img "BASERTURK OTOMOTIV" [ref=e117]
+          - paragraph [ref=e119]: F
+        - generic [ref=e120]:
+          - generic [ref=e121]:
+            - link "BASERTURK OTOMOTIV" [ref=e122] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-baserturk-otomotiv-kutahya-13907.html
+            - paragraph [ref=e123]: Fuatpaşa Bereket Cd. 31/A Kütahya Merkez
+            - paragraph [ref=e124]: KUTAHYA 43050
+            - paragraph [ref=e125]: 78.7 km
+          - paragraph [ref=e126]: "Çalışma Saatleri: 08:30 - 18:30"
+      - generic [ref=e127]:
+        - figure [ref=e128]:
+          - link [ref=e129] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-global-otomotiv-eskişehir-10651.html
+            - img "Global Otomotiv" [ref=e130]
+          - paragraph [ref=e132]: G
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - link "Global Otomotiv" [ref=e135] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-global-otomotiv-eskişehir-10651.html
+            - paragraph [ref=e136]: Emko Sanayi Sitesi Kayseri Cd. No:20/A Odunpazarı
+            - paragraph [ref=e137]: Eskişehir 26100
+            - paragraph [ref=e138]: 82.5 km
+          - paragraph [ref=e139]: "Çalışma Saatleri: 08:30-18:00"
+      - generic [ref=e140]:
+        - figure [ref=e141]:
+          - link [ref=e142] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-hot-rod-garage-eski̇şehi̇r-14343.html
+            - img "HOT ROD GARAGE" [ref=e143]
+          - paragraph [ref=e145]: H
+        - generic [ref=e146]:
+          - generic [ref=e147]:
+            - link "HOT ROD GARAGE" [ref=e148] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-hot-rod-garage-eski̇şehi̇r-14343.html
+            - paragraph [ref=e149]: 75. Yıl Mahallesi Çanakkale Sk. EMKO SANAYİ SİTESİ A-6 Blok No:16
+            - paragraph [ref=e150]: ESKİŞEHİR 26250
+            - paragraph [ref=e151]: 82.8 km
+          - paragraph [ref=e152]: "Çalışma Saatleri: 08:30 - 18:30"
+      - generic [ref=e153]:
+        - figure [ref=e154]:
+          - link [ref=e155] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-karel-otomotiv-eskişehir-11227.html
+            - img "Karel Otomotiv" [ref=e156]
+          - generic [ref=e157]:
+            - paragraph [ref=e158]: I
+            - paragraph [ref=e161]: 5/5 (2 değerlendirme)
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - link "Karel Otomotiv" [ref=e164] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-karel-otomotiv-eskişehir-11227.html
+            - paragraph [ref=e165]: Yenidoğan Mah. Kaderli Sk. No:8 Odunpazarı
+            - paragraph [ref=e166]: Eskişehir 26060
+            - paragraph [ref=e167]: 85.5 km
+          - paragraph [ref=e168]: "Çalışma Saatleri: 08:30-18:30"
+      - generic [ref=e169]:
+        - figure [ref=e170]:
+          - link [ref=e171] [cursor=pointer]:
+            - /url: https://www.euroreparcarservice-tr.com/merkez-eymen-otomotiv-eskişehir-9445.html
+            - img "Eymen Otomotiv" [ref=e172]
+          - generic [ref=e173]:
+            - paragraph [ref=e174]: J
+            - paragraph [ref=e177]: 5/5 (1 değerlendirme)
+        - generic [ref=e178]:
+          - generic [ref=e179]:
+            - link "Eymen Otomotiv" [ref=e180] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/merkez-eymen-otomotiv-eskişehir-9445.html
+            - paragraph [ref=e181]: "Gündoğdu Mah Muratcan Sok No: 29 Odunpazarı"
+            - paragraph [ref=e182]: Eskişehir 26000
+            - paragraph [ref=e183]: 85.9 km
+          - paragraph [ref=e184]: "Çalışma Saatleri: 08:30-18:30"
+      - generic [ref=e186]:
+        - link "previous":
+          - /url: "#"
+          - img "previous"
+        - list [ref=e187]:
+          - listitem [ref=e188]:
+            - link "1" [ref=e189] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html?map.center.lat=39.0015442&map.center.long=30.6892717&search.kilometer.radius.city=150&lat.reference=39.0015442&long.reference=30.6892717&has_search=0&page=1
+          - listitem [ref=e190]:
+            - link "2" [ref=e191] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html?map.center.lat=39.0015442&map.center.long=30.6892717&search.kilometer.radius.city=150&lat.reference=39.0015442&long.reference=30.6892717&has_search=0&page=2
+          - listitem [ref=e192]:
+            - link "3" [ref=e193] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html?map.center.lat=39.0015442&map.center.long=30.6892717&search.kilometer.radius.city=150&lat.reference=39.0015442&long.reference=30.6892717&has_search=0&page=3
+          - listitem [ref=e194]:
+            - link "4" [ref=e195] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html?map.center.lat=39.0015442&map.center.long=30.6892717&search.kilometer.radius.city=150&lat.reference=39.0015442&long.reference=30.6892717&has_search=0&page=4
+          - listitem [ref=e196]:
+            - link "34" [ref=e197] [cursor=pointer]:
+              - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html?map.center.lat=39.0015442&map.center.long=30.6892717&search.kilometer.radius.city=150&lat.reference=39.0015442&long.reference=30.6892717&has_search=0&page=34
+        - link [ref=e198] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/servis-noktalari.html?map.center.lat=39.0015442&map.center.long=30.6892717&search.kilometer.radius.city=150&lat.reference=39.0015442&long.reference=30.6892717&has_search=0&page=2
+          - img "next" [ref=e199]
+    - generic [ref=e200]:
+      - generic [ref=e202]:
+        - generic:
+          - button "Klavye kısayolları"
+        - region "Harita" [ref=e203]
+        - generic [ref=e204]:
+          - generic [ref=e205]:
+            - generic:
+              - generic:
+                - generic [ref=e242]: "2"
+                - generic [ref=e247]: "2"
+                - generic [ref=e252]: "3"
+                - generic [ref=e257]: "82"
+                - generic [ref=e262]: "10"
+                - generic [ref=e267]: "7"
+                - generic [ref=e272]: "5"
+                - generic [ref=e277]: "26"
+                - generic [ref=e282]: "2"
+                - generic [ref=e287]: "7"
+                - generic [ref=e292]: "2"
+                - generic [ref=e297]: "25"
+                - generic [ref=e302]: "4"
+                - generic [ref=e307]: "3"
+                - generic [ref=e312]: "5"
+                - generic [ref=e317]: "5"
+                - generic [ref=e322]: "6"
+                - generic [ref=e327]: "2"
+                - generic [ref=e332]: "6"
+                - generic [ref=e337]: "3"
+                - generic [ref=e342]: "2"
+                - generic [ref=e347]: "7"
+                - generic [ref=e352]: "8"
+                - generic [ref=e357]: "3"
+                - generic [ref=e362]: A
+                - generic [ref=e367]: B
+                - generic [ref=e372]: C
+                - generic [ref=e377]: D
+                - generic [ref=e382]: E
+                - generic [ref=e387]: F
+                - generic [ref=e392]: G
+                - generic [ref=e397]: H
+                - generic [ref=e402]: I
+                - generic [ref=e407]: J
+            - generic [ref=e420]:
+              - generic:
+                - generic:
+                  - button "2" [ref=e422] [cursor=pointer]
+                  - button "2" [ref=e423] [cursor=pointer]
+                  - button "3" [ref=e424] [cursor=pointer]
+                  - button "82" [ref=e425] [cursor=pointer]
+                  - button "10" [ref=e426] [cursor=pointer]
+                  - button "7" [ref=e427] [cursor=pointer]
+                  - button "5" [ref=e428] [cursor=pointer]
+                  - button "26" [ref=e429] [cursor=pointer]
+                  - button "2" [ref=e430] [cursor=pointer]
+                  - button "7" [ref=e431] [cursor=pointer]
+                  - button "2" [ref=e432] [cursor=pointer]
+                  - button "25" [ref=e433] [cursor=pointer]
+                  - button "4" [ref=e434] [cursor=pointer]
+                  - button "3" [ref=e435] [cursor=pointer]
+                  - button "5" [ref=e436] [cursor=pointer]
+                  - button "5" [ref=e437] [cursor=pointer]
+                  - button "6" [ref=e438] [cursor=pointer]
+                  - button "2" [ref=e439] [cursor=pointer]
+                  - button "6" [ref=e440] [cursor=pointer]
+                  - button "3" [ref=e441] [cursor=pointer]
+                  - button "2" [ref=e442] [cursor=pointer]
+                  - button "7" [ref=e443] [cursor=pointer]
+                  - button "8" [ref=e444] [cursor=pointer]
+                  - button "3" [ref=e445] [cursor=pointer]
+                  - button "A" [ref=e446] [cursor=pointer]
+                  - button "B" [ref=e447] [cursor=pointer]
+                  - button "C" [ref=e448] [cursor=pointer]
+                  - button "D" [ref=e449] [cursor=pointer]
+                  - button "E" [ref=e450] [cursor=pointer]
+                  - button "F" [ref=e451] [cursor=pointer]
+                  - button "G" [ref=e452] [cursor=pointer]
+                  - button "H" [ref=e453] [cursor=pointer]
+                  - button "I" [ref=e454] [cursor=pointer]
+                  - button "J" [ref=e455] [cursor=pointer]
+          - iframe [ref=e456]:
+            
+          - menubar [ref=e457] [cursor=pointer]:
+            - menuitemradio "Sokak haritasını göster" [checked] [ref=e458]: Harita
+            - menuitemradio "Uydu görüntülerini göster" [ref=e459]: Uydu
+          - generic:
+            - button "Tam ekran görünümü açma/kapama" [ref=e460] [cursor=pointer]
+            - generic [ref=e462] [cursor=pointer]:
+              - button "Büyüt" [ref=e463]
+              - button "Küçült" [ref=e465]
+          - generic:
+            - generic:
+              - button "Harita kamerası kontrolleri" [ref=e467] [cursor=pointer]
+              - button "Street View'u açmak için Pegman'i harita üzerine sürükleyin" [ref=e468] [cursor=pointer]:
+                - generic:
+                  - img "Street View Pegman Kontrolü"
+          - link "Bu bölgeyi Google Haritalar'da açın (yeni pencerede açılır)" [ref=e470] [cursor=pointer]:
+            - /url: https://maps.google.com/maps?ll=39.001544,30.689272&z=6&t=m&hl=tr&gl=TR&mapclient=apiv3
+            - img "Google" [ref=e472]
+          - generic [ref=e473]:
+            - button "Klavye kısayolları" [ref=e479] [cursor=pointer]
+            - generic [ref=e480]: Harita verileri ©2026 Google, Mapa GISrael
+            - link "Şartlar (yeni sekmede açılır)" [ref=e489] [cursor=pointer]:
+              - /url: https://www.google.com/intl/tr_TR/help/terms_maps.html
+              - text: Şartlar
+      - generic [ref=e490]:
+        - text: By using Google Maps, you as a user of this website are subject to the Google Maps Additional
+        - link "Terms of Use" [ref=e491] [cursor=pointer]:
+          - /url: https://policies.google.com/privacy?hl=en
+  - contentinfo [ref=e492]:
+    - paragraph [ref=e493]: Copyright ©2026
+    - list [ref=e494]:
+      - listitem [ref=e495]:
+        - link "Site Haritası" [ref=e496] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/site-haritasi.html
+      - listitem [ref=e497]:
+        - link "Aydınlatma Metni" [ref=e498] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/aydinlatma-metni.html
+      - listitem [ref=e499]:
+        - link "Hüküm ve Koşullar" [ref=e500] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/hukum-ve-kosullar.html
+      - listitem [ref=e501]:
+        - link "Gizlilik Politikası" [ref=e502] [cursor=pointer]:
+          - /url: https://www.euroreparcarservice-tr.com/gizlilik-politikasi.html
+  - status [ref=e503]
+  - status [ref=e504]
+  - text: ✔ ✔ ✔

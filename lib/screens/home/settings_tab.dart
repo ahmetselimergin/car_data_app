@@ -43,24 +43,14 @@ class _SettingsTabState extends State<_SettingsTab> {
 
   Future<void> _confirmSignOut() async {
     final AppLocalizations l10n = context.l10n;
-    final bool? ok = await showDialog<bool>(
+    final bool ok = await showAppConfirmDialog(
       context: context,
-      builder: (BuildContext ctx) => AlertDialog(
-        title: Text(l10n.signOutDialogTitle),
-        content: Text(l10n.signOutConfirm),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.signOut),
-          ),
-        ],
-      ),
+      title: l10n.signOutDialogTitle,
+      message: l10n.signOutConfirm,
+      confirmLabel: l10n.signOut,
+      confirmIcon: Icons.logout_rounded,
     );
-    if (ok == true && mounted) {
+    if (ok && mounted) {
       await SessionController.instance.signOut();
     }
   }

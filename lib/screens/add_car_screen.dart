@@ -19,6 +19,8 @@ import '../theme/app_theme.dart';
 import '../theme/car_card_palette.dart';
 import '../utils/distance_format.dart';
 import '../utils/turkish_plate.dart';
+import '../utils/user_facing_error.dart';
+import '../widgets/app_confirm_dialog.dart';
 
 int _colorToArgb32(Color c) {
   final int a = (c.a * 255).round().clamp(0, 255);
@@ -204,34 +206,20 @@ class _AddCarScreenState extends State<AddCarScreen> {
     final Car? c = widget.existing;
     if (c?.id == null) return;
     final AppLocalizations l10n = context.l10n;
-    final bool? ok = await showDialog<bool>(
+    final bool ok = await showAppConfirmDialog(
       context: context,
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          title: Text(l10n.deleteCarTitle),
-          content: Text(l10n.deleteCarMessage(c!.marka, c.model)),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-              ),
-              child: Text(l10n.delete),
-            ),
-          ],
-        );
-      },
+      title: l10n.deleteCarTitle,
+      message: l10n.deleteCarMessage(c!.marka, c.model),
+      confirmLabel: l10n.delete,
+      destructive: true,
+      confirmIcon: Icons.delete_outline_rounded,
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
 
     setState(() => _saving = true);
     try {
       await ImageStorageService.instance.deleteIfExists(_existingImagePath);
-      await _repo.deleteCar(c!.id!);
+      await _repo.deleteCar(c.id!);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.carDeleted)),
@@ -240,7 +228,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.deleteFailed('$e'))),
+        SnackBar(content: Text(userFacingError(e, l10n))),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -315,7 +303,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.cropSkipped('$e'))),
+          SnackBar(content: Text(userFacingError(e, l10n))),
         );
       }
       return picked;
@@ -343,7 +331,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.photoPickFailed('$e'))),
+        SnackBar(content: Text(userFacingError(e, context.l10n))),
       );
     }
   }
@@ -520,7 +508,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.genericError('$e'))),
+        SnackBar(content: Text(userFacingError(e, l10n))),
       );
     } finally {
       if (mounted) {

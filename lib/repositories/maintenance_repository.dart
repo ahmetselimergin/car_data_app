@@ -3,6 +3,7 @@ import '../services/database_helper.dart';
 
 abstract class MaintenanceRepository {
   Future<int> addMaintenance(Maintenance log);
+  Future<int> updateMaintenance(Maintenance log);
   Future<List<Maintenance>> getMaintenanceByCarId(int carId);
   Future<int> deleteMaintenance(int id);
 }
@@ -15,6 +16,10 @@ class SqliteMaintenanceRepository implements MaintenanceRepository {
 
   @override
   Future<int> addMaintenance(Maintenance log) => _db.insertMaintenance(log);
+
+  @override
+  Future<int> updateMaintenance(Maintenance log) =>
+      _db.updateMaintenance(log);
 
   @override
   Future<List<Maintenance>> getMaintenanceByCarId(int carId) =>

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../models/reminder_model.dart';
+
 enum ReminderStatus {
   expired,
   critical,
@@ -10,6 +12,12 @@ enum ReminderStatus {
 
 class DateHelper {
   DateHelper._();
+
+  /// Km kalan ≤ bu değer → critical (bildirim eşiği ile uyumlu).
+  static const int kmCriticalThreshold = 500;
+
+  /// Km kalan ≤ bu değer → approaching.
+  static const int kmApproachingThreshold = 1000;
 
   static DateFormat dateFormatterFor(String localeTag) =>
       DateFormat('dd MMM yyyy', localeTag);
@@ -29,6 +37,33 @@ class DateHelper {
     if (diff < 15) return ReminderStatus.critical;
     if (diff < 30) return ReminderStatus.approaching;
     return ReminderStatus.safe;
+  }
+
+  /// Hedef km − güncel km. [targetKm] yoksa null.
+  static int? kmRemaining(Reminder r, int currentKm) {
+    final int? target = r.targetKm;
+    if (target == null) return null;
+    return target - currentKm;
+  }
+
+  /// Km tabanlı hatırlatıcıda odometre; değilse bitiş tarihine göre durum.
+  static ReminderStatus statusForReminder(
+    Reminder r, {
+    required int currentKm,
+  }) {
+    if (r.isKmBased) {
+      final int? remaining = kmRemaining(r, currentKm);
+      if (remaining == null) return ReminderStatus.safe;
+      if (remaining <= 0) return ReminderStatus.expired;
+      if (remaining <= kmCriticalThreshold) return ReminderStatus.critical;
+      if (remaining <= kmApproachingThreshold) {
+        return ReminderStatus.approaching;
+      }
+      return ReminderStatus.safe;
+    }
+    final DateTime? date = r.bitisTarihi;
+    if (date == null) return ReminderStatus.safe;
+    return statusFor(date);
   }
 
   static Color colorFor(ReminderStatus status) {

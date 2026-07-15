@@ -222,9 +222,41 @@ class AppLocalizationsEs extends AppLocalizations {
       'Aún no hay recordatorios. Abre un vehículo y añade fechas de seguro, inspección o emisiones.';
 
   @override
+  String get goToGarage => 'Ir al garaje';
+
+  @override
   String genericError(String error) {
     return 'Error: $error';
   }
+
+  @override
+  String get somethingWentWrong => 'Algo salió mal';
+
+  @override
+  String get tryAgain => 'Reintentar';
+
+  @override
+  String get loadFailedHint =>
+      'No se pudieron cargar los datos. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get saveFailedFriendly => 'No se pudo guardar. Inténtalo de nuevo.';
+
+  @override
+  String get deleteFailedFriendly => 'No se pudo eliminar. Inténtalo de nuevo.';
+
+  @override
+  String get signInRequired => 'Debes iniciar sesión para esta acción.';
+
+  @override
+  String get photoNotFoundFriendly => 'No se encontró la foto del vehículo.';
+
+  @override
+  String get reminderTypeLabel => 'Tipo';
+
+  @override
+  String get deleteMaintenanceMessage =>
+      '¿Eliminar este registro de mantenimiento?';
 
   @override
   String get welcomeTitle => 'Tu garaje, todo en un solo lugar';
@@ -557,7 +589,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get maintenanceEmpty =>
-      'Aún no hay registros de mantenimiento.\nPulsa + para añadir el primero.';
+      'Registra cambios de aceite, neumáticos y otros trabajos aquí.';
 
   @override
   String get deleteTooltip => 'Eliminar';
@@ -570,6 +602,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get newMaintenanceEntry => 'Nuevo registro de mantenimiento';
+
+  @override
+  String get editMaintenanceEntry => 'Editar registro de mantenimiento';
+
+  @override
+  String get editAction => 'Editar';
 
   @override
   String get titleOptional => 'Título (opcional)';
@@ -657,7 +695,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get maintenanceLogTooltip => 'Registro de mantenimiento';
 
   @override
-  String get remindersEmptyTitle => 'Aún no hay recordatorios.';
+  String get remindersEmptyTitle => 'Aún no hay recordatorios';
 
   @override
   String get remindersEmptySubtitle =>
@@ -709,6 +747,49 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reminderTypeEmissions => 'Emisiones';
+
+  @override
+  String get reminderTypeServiceKm => 'Mantenimiento (km)';
+
+  @override
+  String get targetKmLabel => 'Kilometraje objetivo';
+
+  @override
+  String get targetKmHint => 'Ej. 150000';
+
+  @override
+  String get targetKmRequired => 'El kilometraje objetivo es obligatorio';
+
+  @override
+  String kmRemainingCount(int km) {
+    return 'Quedan $km km';
+  }
+
+  @override
+  String kmOverdueCount(int km) {
+    return '$km km de retraso';
+  }
+
+  @override
+  String get addAttachment => 'Añadir adjunto';
+
+  @override
+  String get changeAttachment => 'Cambiar adjunto';
+
+  @override
+  String get removeAttachment => 'Quitar adjunto';
+
+  @override
+  String get attachmentLabel => 'Adjunto (recibo / factura)';
+
+  @override
+  String get openAttachment => 'Abrir adjunto';
+
+  @override
+  String get homeWidgetTitle => 'Próximos';
+
+  @override
+  String get homeWidgetEmpty => 'No hay recordatorios próximos';
 
   @override
   String get statusExpired => 'Caducado';

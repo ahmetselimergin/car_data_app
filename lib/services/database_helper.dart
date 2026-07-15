@@ -11,7 +11,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
   static const String _dbName = 'car_data.db';
-  static const int _dbVersion = 6;
+  static const int _dbVersion = 8;
 
   static const String tableCars = 'cars';
   static const String tableReminders = 'reminders';
@@ -76,6 +76,14 @@ class DatabaseHelper {
         'ALTER TABLE $tableMaintenance ADD COLUMN bakimKalemleri TEXT',
       );
     }
+    if (oldVersion < 7) {
+      await db.execute('ALTER TABLE $tableReminders ADD COLUMN targetKm INTEGER');
+    }
+    if (oldVersion < 8) {
+      await db.execute(
+        'ALTER TABLE $tableMaintenance ADD COLUMN attachmentUrl TEXT',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -99,7 +107,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         carId INTEGER NOT NULL,
         tur TEXT NOT NULL,
-        bitisTarihi TEXT NOT NULL,
+        bitisTarihi TEXT,
+        targetKm INTEGER,
         hatirlatmaYapildiMi INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (carId) REFERENCES $tableCars (id) ON DELETE CASCADE
       )
@@ -120,6 +129,7 @@ class DatabaseHelper {
         faturaAlindi INTEGER NOT NULL DEFAULT 0,
         sigortaKarsiladi INTEGER NOT NULL DEFAULT 0,
         bakimKalemleri TEXT,
+        attachmentUrl TEXT,
         FOREIGN KEY (carId) REFERENCES $tableCars (id) ON DELETE CASCADE
       )
     ''');
@@ -218,6 +228,19 @@ class DatabaseHelper {
     return db.insert(tableReminders, reminder.toMap()..remove('id'));
   }
 
+  /// Supabase id'sini yerel FK / bildirim id'si için aynen saklar.
+  Future<int> insertReminderWithId(Reminder reminder) async {
+    if (reminder.id == null) {
+      throw ArgumentError('insertReminderWithId için id zorunlu.');
+    }
+    final Database db = await database;
+    return db.insert(
+      tableReminders,
+      reminder.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   Future<List<Reminder>> getAllReminders() async {
     final Database db = await database;
     final List<Map<String, dynamic>> rows =
@@ -261,6 +284,19 @@ class DatabaseHelper {
     return db.insert(tableMaintenance, log.toMap()..remove('id'));
   }
 
+  /// Supabase id'sini yerel yansıma için aynen saklar.
+  Future<int> insertMaintenanceWithId(Maintenance log) async {
+    if (log.id == null) {
+      throw ArgumentError('insertMaintenanceWithId için id zorunlu.');
+    }
+    final Database db = await database;
+    return db.insert(
+      tableMaintenance,
+      log.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   Future<List<Maintenance>> getMaintenanceByCarId(int carId) async {
     final Database db = await database;
     final List<Map<String, dynamic>> rows = await db.query(
@@ -278,6 +314,19 @@ class DatabaseHelper {
       tableMaintenance,
       where: 'id = ?',
       whereArgs: <Object>[id],
+    );
+  }
+
+  Future<int> updateMaintenance(Maintenance log) async {
+    if (log.id == null) {
+      throw ArgumentError('updateMaintenance requires id');
+    }
+    final Database db = await database;
+    return db.update(
+      tableMaintenance,
+      log.toMap()..remove('id'),
+      where: 'id = ?',
+      whereArgs: <Object>[log.id!],
     );
   }
 

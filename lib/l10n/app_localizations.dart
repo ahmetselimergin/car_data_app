@@ -490,11 +490,71 @@ abstract class AppLocalizations {
   /// **'No reminders yet. Open a vehicle and add insurance, inspection or emissions dates.'**
   String get allRemindersEmpty;
 
+  /// No description provided for @goToGarage.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to garage'**
+  String get goToGarage;
+
   /// No description provided for @genericError.
   ///
   /// In en, this message translates to:
   /// **'Error: {error}'**
   String genericError(String error);
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @loadFailedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load data. Check your connection and try again.'**
+  String get loadFailedHint;
+
+  /// No description provided for @saveFailedFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t save. Please try again.'**
+  String get saveFailedFriendly;
+
+  /// No description provided for @deleteFailedFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t delete. Please try again.'**
+  String get deleteFailedFriendly;
+
+  /// No description provided for @signInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to be signed in for this action.'**
+  String get signInRequired;
+
+  /// No description provided for @photoNotFoundFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle photo not found.'**
+  String get photoNotFoundFriendly;
+
+  /// No description provided for @reminderTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get reminderTypeLabel;
+
+  /// No description provided for @deleteMaintenanceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this maintenance record?'**
+  String get deleteMaintenanceMessage;
 
   /// No description provided for @welcomeTitle.
   ///
@@ -1123,7 +1183,7 @@ abstract class AppLocalizations {
   /// No description provided for @maintenanceEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No maintenance records yet.\nTap + to add the first one.'**
+  /// **'Log oil changes, tires and other work here.'**
   String get maintenanceEmpty;
 
   /// No description provided for @deleteTooltip.
@@ -1149,6 +1209,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New maintenance entry'**
   String get newMaintenanceEntry;
+
+  /// No description provided for @editMaintenanceEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit maintenance entry'**
+  String get editMaintenanceEntry;
+
+  /// No description provided for @editAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editAction;
 
   /// No description provided for @titleOptional.
   ///
@@ -1309,7 +1381,7 @@ abstract class AppLocalizations {
   /// No description provided for @remindersEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'No reminders added yet.'**
+  /// **'No reminders yet'**
   String get remindersEmptyTitle;
 
   /// No description provided for @remindersEmptySubtitle.
@@ -1401,6 +1473,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Emissions'**
   String get reminderTypeEmissions;
+
+  /// No description provided for @reminderTypeServiceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Service (km)'**
+  String get reminderTypeServiceKm;
+
+  /// No description provided for @targetKmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target mileage'**
+  String get targetKmLabel;
+
+  /// No description provided for @targetKmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 150000'**
+  String get targetKmHint;
+
+  /// No description provided for @targetKmRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Target mileage is required'**
+  String get targetKmRequired;
+
+  /// No description provided for @kmRemainingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km left'**
+  String kmRemainingCount(int km);
+
+  /// No description provided for @kmOverdueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km overdue'**
+  String kmOverdueCount(int km);
+
+  /// No description provided for @addAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add attachment'**
+  String get addAttachment;
+
+  /// No description provided for @changeAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Change attachment'**
+  String get changeAttachment;
+
+  /// No description provided for @removeAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove attachment'**
+  String get removeAttachment;
+
+  /// No description provided for @attachmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment (receipt / invoice)'**
+  String get attachmentLabel;
+
+  /// No description provided for @openAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Open attachment'**
+  String get openAttachment;
+
+  /// No description provided for @homeWidgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get homeWidgetTitle;
+
+  /// No description provided for @homeWidgetEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming reminders'**
+  String get homeWidgetEmpty;
 
   /// No description provided for @statusExpired.
   ///

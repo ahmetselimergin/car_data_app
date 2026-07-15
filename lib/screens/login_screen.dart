@@ -6,6 +6,7 @@ import '../l10n/l10n_ext.dart';
 import '../services/onboarding_controller.dart';
 import '../services/session_controller.dart';
 import '../theme/app_theme.dart';
+import '../utils/user_facing_error.dart';
 import 'auth_widgets.dart';
 import 'register_screen.dart';
 
@@ -43,6 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(authErrorMessage(e, context.l10n))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(userFacingError(e, context.l10n))),
         );
       }
     } finally {

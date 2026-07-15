@@ -220,9 +220,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'No reminders yet. Open a vehicle and add insurance, inspection or emissions dates.';
 
   @override
+  String get goToGarage => 'Go to garage';
+
+  @override
   String genericError(String error) {
     return 'Error: $error';
   }
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get loadFailedHint =>
+      'Couldn’t load data. Check your connection and try again.';
+
+  @override
+  String get saveFailedFriendly => 'Couldn’t save. Please try again.';
+
+  @override
+  String get deleteFailedFriendly => 'Couldn’t delete. Please try again.';
+
+  @override
+  String get signInRequired => 'You need to be signed in for this action.';
+
+  @override
+  String get photoNotFoundFriendly => 'Vehicle photo not found.';
+
+  @override
+  String get reminderTypeLabel => 'Type';
+
+  @override
+  String get deleteMaintenanceMessage => 'Delete this maintenance record?';
 
   @override
   String get welcomeTitle => 'Your garage, all in one place';
@@ -555,8 +586,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addMaintenance => 'Add maintenance';
 
   @override
-  String get maintenanceEmpty =>
-      'No maintenance records yet.\nTap + to add the first one.';
+  String get maintenanceEmpty => 'Log oil changes, tires and other work here.';
 
   @override
   String get deleteTooltip => 'Delete';
@@ -569,6 +599,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newMaintenanceEntry => 'New maintenance entry';
+
+  @override
+  String get editMaintenanceEntry => 'Edit maintenance entry';
+
+  @override
+  String get editAction => 'Edit';
 
   @override
   String get titleOptional => 'Title (optional)';
@@ -653,7 +689,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maintenanceLogTooltip => 'Maintenance log';
 
   @override
-  String get remindersEmptyTitle => 'No reminders added yet.';
+  String get remindersEmptyTitle => 'No reminders yet';
 
   @override
   String get remindersEmptySubtitle =>
@@ -705,6 +741,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderTypeEmissions => 'Emissions';
+
+  @override
+  String get reminderTypeServiceKm => 'Service (km)';
+
+  @override
+  String get targetKmLabel => 'Target mileage';
+
+  @override
+  String get targetKmHint => 'e.g. 150000';
+
+  @override
+  String get targetKmRequired => 'Target mileage is required';
+
+  @override
+  String kmRemainingCount(int km) {
+    return '$km km left';
+  }
+
+  @override
+  String kmOverdueCount(int km) {
+    return '$km km overdue';
+  }
+
+  @override
+  String get addAttachment => 'Add attachment';
+
+  @override
+  String get changeAttachment => 'Change attachment';
+
+  @override
+  String get removeAttachment => 'Remove attachment';
+
+  @override
+  String get attachmentLabel => 'Attachment (receipt / invoice)';
+
+  @override
+  String get openAttachment => 'Open attachment';
+
+  @override
+  String get homeWidgetTitle => 'Upcoming';
+
+  @override
+  String get homeWidgetEmpty => 'No upcoming reminders';
 
   @override
   String get statusExpired => 'Expired';

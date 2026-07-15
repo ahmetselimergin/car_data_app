@@ -239,18 +239,28 @@ class _AttentionCard extends StatelessWidget {
         return Icons.fact_check_outlined;
       case ReminderType.egzoz:
         return Icons.air;
+      case ReminderType.bakimKm:
+        return Icons.speed_outlined;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
-    final ReminderStatus status = DateHelper.statusFor(reminder.bitisTarihi);
-    final int days = DateHelper.daysUntil(reminder.bitisTarihi);
+    final ReminderStatus status = DateHelper.statusForReminder(
+      reminder,
+      currentKm: car.km,
+    );
     final Color statusColor = DateHelper.colorFor(status);
     final bool highlighted = status == ReminderStatus.critical ||
         status == ReminderStatus.expired;
     final Color vivid = GarageCardTheming.vividForeground(accent, context);
+    final bool kmBased = reminder.isKmBased;
+    final int? kmLeft = DateHelper.kmRemaining(reminder, car.km);
+    final int? days =
+        reminder.bitisTarihi == null
+            ? null
+            : DateHelper.daysUntil(reminder.bitisTarihi!);
 
     return InkWell(
       borderRadius: BorderRadius.circular(22),
@@ -297,23 +307,39 @@ class _AttentionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              days < 0 ? l10n.expired : l10n.remainingUntilExpiry,
+              kmBased
+                  ? ((kmLeft ?? 0) <= 0
+                      ? l10n.expired
+                      : l10n.remainingUntilExpiry)
+                  : ((days ?? 0) < 0
+                      ? l10n.expired
+                      : l10n.remainingUntilExpiry),
               style: TextStyle(
                 fontSize: 11,
-                color: days < 0
+                color: (kmBased ? (kmLeft ?? 0) <= 0 : (days ?? 0) < 0)
                     ? statusColor
                     : GarageCardTheming.supportiveLabel(context, accent),
                 fontWeight: FontWeight.w600,
               ),
             ),
             Text(
-              days < 0 ? l10n.daysAgo(days.abs()) : l10n.daysCount(days),
+              kmBased
+                  ? ((kmLeft ?? 0) <= 0
+                      ? l10n.kmOverdueCount((kmLeft ?? 0).abs())
+                      : l10n.kmRemainingCount(kmLeft ?? 0))
+                  : ((days ?? 0) < 0
+                      ? l10n.daysAgo(days!.abs())
+                      : l10n.daysCount(days ?? 0)),
               style: TextStyle(
                 color: highlighted
                     ? statusColor
                     : Theme.of(context).textTheme.titleMedium?.color,
                 fontWeight: FontWeight.w800,
+                fontSize: kmBased ? 12 : null,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

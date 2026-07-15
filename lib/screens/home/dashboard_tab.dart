@@ -33,8 +33,7 @@ class _DashboardTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError && effective == null) {
-          return Center(
-              child: Text(context.l10n.genericError(snap.error.toString())));
+          return LoadErrorView(onRetry: onRefresh);
         }
         final _GarageData data = effective!;
 
@@ -225,6 +224,14 @@ class _DashboardTab extends StatelessWidget {
                 ),
               ),
 
+              const SizedBox(height: 14),
+
+              // En Yakın Tamirci — harita ekranına götüren şık kart-buton
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: _NearestMechanicCard(),
+              ),
+
               const SizedBox(height: 18),
 
               Padding(
@@ -258,6 +265,134 @@ class _DashboardTab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Ana ekranda "En Yakın Tamirci" harita ekranını açan şık kart-buton.
+class _NearestMechanicCard extends StatelessWidget {
+  const _NearestMechanicCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(32),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const NearestMechanicScreen(),
+            ),
+          );
+        },
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[Color(0xFFF5731F), Color(0xFFDE3B0C)],
+            ),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: const Color(0xFFDE3B0C).withValues(alpha: 0.35),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: <Widget>[
+              // Dekoratif harita halkaları (sağ üst)
+              Positioned(
+                right: -26,
+                top: -26,
+                child: _ring(120, 0.10),
+              ),
+              Positioned(
+                right: 18,
+                top: 20,
+                child: _ring(64, 0.14),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 18, 18, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: Image.asset(
+                        'assets/images/eurorepar-logo.png',
+                        height: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'En Yakın Servis',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(Icons.format_list_bulleted,
+                              color: Colors.white, size: 15),
+                          SizedBox(width: 6),
+                          Text(
+                            'Servisleri Gör',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _ring(double size, double alpha) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: alpha),
+          width: 2,
+        ),
+      ),
     );
   }
 }

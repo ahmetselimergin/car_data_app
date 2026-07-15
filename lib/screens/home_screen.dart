@@ -15,11 +15,14 @@ import '../repositories/car_repository.dart';
 import '../repositories/maintenance_repository.dart';
 import '../repositories/reminder_repository.dart';
 import '../repositories/supabase_car_repository.dart';
+import '../repositories/supabase_maintenance_repository.dart';
+import '../repositories/supabase_reminder_repository.dart';
 import '../l10n/l10n_ext.dart';
 import '../services/date_helper.dart';
 import '../services/distance_unit_controller.dart';
 import '../services/image_storage_service.dart';
 import '../services/locale_controller.dart';
+import '../services/home_widget_service.dart';
 import '../services/notification_service.dart';
 import '../utils/distance_format.dart';
 import '../services/session_controller.dart';
@@ -30,16 +33,18 @@ import '../theme/car_card_palette.dart';
 import '../theme/garage_card_theming.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/brand_logo_circle.dart';
+import '../widgets/app_confirm_dialog.dart';
+import '../widgets/load_error_view.dart';
 import '../widgets/undraw_empty_state.dart';
 import 'add_car_screen.dart';
 import 'maintenance_screen.dart';
+import 'nearest_mechanic_screen.dart';
 import 'reminder_screen.dart';
 
 part 'home/garage_data.dart';
 part 'home/dashboard_tab.dart';
 part 'home/car_header_card.dart';
 part 'home/needs_attention.dart';
-part 'home/history_widgets.dart';
 part 'home/empty_garage.dart';
 part 'home/all_reminders_tab.dart';
 part 'home/settings_tab.dart';
@@ -56,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
 
   final CarRepository _carRepo = SupabaseCarRepository();
-  final ReminderRepository _reminderRepo = SqliteReminderRepository();
-  final MaintenanceRepository _mRepo = SqliteMaintenanceRepository();
+  final ReminderRepository _reminderRepo = SupabaseReminderRepository();
+  final MaintenanceRepository _mRepo = SupabaseMaintenanceRepository();
 
   late Future<_GarageData> _future;
   _GarageData? _cachedGarage;
@@ -73,8 +78,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<_GarageData> _bootstrap() async {
     final _GarageData d = await _load();
     if (mounted) setState(() => _cachedGarage = d);
-    // Mevcut hatırlatıcılar için 15/7/1 gün bildirimlerini yenile.
+    // Mevcut hatırlatıcılar için 15/7/1 gün + km bildirimlerini yenile.
     unawaited(_rescheduleAllNotifications(d));
+    unawaited(_updateHomeWidget(d));
     return d;
   }
 
@@ -96,6 +102,21 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       } catch (_) {}
     }
+    try {
+      await NotificationService.instance.checkKmReminders(
+        reminders: data.reminders,
+        carsById: carsById,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _updateHomeWidget(_GarageData data) async {
+    try {
+      await HomeWidgetService.instance.updateUpcoming(
+        reminders: data.reminders,
+        cars: data.cars,
+      );
+    } catch (_) {}
   }
 
   @override
@@ -133,6 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _future = Future<_GarageData>.value(d);
         _currentCar = newIdx;
       });
+      unawaited(_rescheduleAllNotifications(d));
+      unawaited(_updateHomeWidget(d));
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !_pageController.hasClients || d.cars.isEmpty) {
           return;
@@ -176,7 +199,12 @@ class _HomeScreenState extends State<HomeScreen> {
         onEditCar: (Car c) => _openAddCar(existing: c),
         onRefresh: _refresh,
       ),
-      _AllRemindersTab(future: _future, cachedGarage: _cachedGarage),
+      _AllRemindersTab(
+        future: _future,
+        cachedGarage: _cachedGarage,
+        onGoToGarage: () => setState(() => _navIndex = 0),
+        onRefresh: _refresh,
+      ),
       const _SettingsTab(),
     ];
 
