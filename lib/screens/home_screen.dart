@@ -39,6 +39,7 @@ import '../widgets/undraw_empty_state.dart';
 import 'add_car_screen.dart';
 import 'maintenance_screen.dart';
 import 'nearest_mechanic_screen.dart';
+import 'support_chat_screen.dart';
 import 'reminder_screen.dart';
 
 part 'home/garage_data.dart';
