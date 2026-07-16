@@ -28,7 +28,7 @@ Migration’lar: `supabase/migrations/`. Prod’da Auth kullanıcılarını Dash
 ## AI Destek Botu (support-chat)
 
 1. Migration’ı uygula: `supabase db push` (`support_messages`, `support_tickets`).
-2. Anthropic anahtarını secret olarak ayarla (yalnız sunucuda):
-   `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`
+2. Gemini anahtarını secret olarak ayarla (yalnız sunucuda; aistudio.google.com'dan ücretsiz):
+   `supabase secrets set GEMINI_API_KEY=...`
 3. Edge Function’ı dağıt: `supabase functions deploy support-chat`
-4. Model: `claude-haiku-4-5`. `SUPABASE_URL`/`SUPABASE_ANON_KEY` otomatik enjekte edilir.
+4. Model: `gemini-2.0-flash` (ücretsiz kat). `SUPABASE_URL`/`SUPABASE_ANON_KEY` otomatik enjekte edilir.

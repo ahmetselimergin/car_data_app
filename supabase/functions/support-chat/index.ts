@@ -6,7 +6,7 @@ const corsHeaders: Record<string, string> = {
     'authorization, x-client-info, apikey, content-type',
 }
 
-const MODEL = 'claude-haiku-4-5'
+const MODEL = 'gemini-2.0-flash'
 const HISTORY_LIMIT = 20
 const MAX_MESSAGE_LEN = 4000
 
@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
-  if (!supabaseUrl || !anonKey || !anthropicKey) {
+  const geminiKey = Deno.env.get('GEMINI_API_KEY')
+  if (!supabaseUrl || !anonKey || !geminiKey) {
     return json({ error: 'Server misconfigured' }, 500)
   }
 
@@ -93,37 +93,39 @@ Deno.serve(async (req) => {
     return json({ error: 'Geçmiş yüklenemedi' }, 500)
   }
 
+  // Gemini rolleri: kullanıcı 'user', asistan 'model'. DB'de 'assistant' saklanır.
   const orderedHistory = (history ?? []).slice().reverse()
-  const claudeMessages = [
+  const geminiContents = [
     ...orderedHistory.map((m) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content as string,
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content as string }],
     })),
-    { role: 'user' as const, content: message },
+    { role: 'user' as const, parts: [{ text: message }] },
   ]
 
-  // Claude çağrısı
+  // Gemini çağrısı
   let reply: string
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-goog-api-key': geminiKey,
+        },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: geminiContents,
+          generationConfig: { maxOutputTokens: 1024 },
+        }),
       },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: claudeMessages,
-      }),
-    })
+    )
     if (!resp.ok) {
       return json({ error: 'AI servisine ulaşılamadı' }, 502)
     }
     const data = await resp.json()
-    reply = (data?.content?.[0]?.text ?? '').trim()
+    reply = (data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim()
     if (!reply) {
       return json({ error: 'AI boş yanıt döndü' }, 502)
     }
