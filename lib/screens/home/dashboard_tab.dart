@@ -232,6 +232,14 @@ class _DashboardTab extends StatelessWidget {
                 child: _NearestMechanicCard(),
               ),
 
+              const SizedBox(height: 14),
+
+              // AI Destek Asistanı — sohbet ekranını açan kart-buton
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: _SupportChatCard(),
+              ),
+
               const SizedBox(height: 18),
 
               Padding(
@@ -391,6 +399,86 @@ class _NearestMechanicCard extends StatelessWidget {
         border: Border.all(
           color: Colors.white.withValues(alpha: alpha),
           width: 2,
+        ),
+      ),
+    );
+  }
+}
+
+/// Ana ekranda AI destek sohbetini açan kart-buton.
+class _SupportChatCard extends StatelessWidget {
+  const _SupportChatCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const SupportChatScreen(),
+            ),
+          );
+        },
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[Color(0xFF2563EB), Color(0xFF1E3A8A)],
+            ),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: const Color(0xFF1E3A8A).withValues(alpha: 0.35),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 18, 18, 18),
+            child: Row(
+              children: const <Widget>[
+                Icon(
+                  Icons.support_agent,
+                  color: Colors.white,
+                  size: 34,
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        'AI Destek Asistanı',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Uygulama yardımı ve araç arıza triyajı',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.white70,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

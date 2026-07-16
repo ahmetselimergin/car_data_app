@@ -3,3 +3,6 @@
 
 [functions.admin-users]
 verify_jwt = true
+
+[functions.support-chat]
+verify_jwt = true
