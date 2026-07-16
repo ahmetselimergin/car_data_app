@@ -47,7 +47,7 @@ class SupportChatService {
         .from('support_messages')
         .select('role, content, created_at')
         .eq('user_id', _uid)
-        .order('created_at', ascending: true);
+        .order('seq', ascending: true);
     return rows
         .map((dynamic r) =>
             SupportMessage.fromMap(Map<String, dynamic>.from(r as Map)))

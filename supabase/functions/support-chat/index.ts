@@ -81,19 +81,21 @@ Deno.serve(async (req) => {
     return json({ error: 'Mesaj çok uzun' }, 400)
   }
 
-  // Geçmişi yükle (caller client, RLS => yalnız kendi satırları)
+  // Geçmişi yükle (caller client, RLS => yalnız kendi satırları).
+  // seq'e göre en yeni HISTORY_LIMIT mesajı al, sonra kronolojik sıraya çevir.
   const { data: history, error: historyError } = await caller
     .from('support_messages')
     .select('role, content')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
+    .order('seq', { ascending: false })
     .limit(HISTORY_LIMIT)
   if (historyError) {
     return json({ error: 'Geçmiş yüklenemedi' }, 500)
   }
 
+  const orderedHistory = (history ?? []).slice().reverse()
   const claudeMessages = [
-    ...(history ?? []).map((m) => ({
+    ...orderedHistory.map((m) => ({
       role: m.role as 'user' | 'assistant',
       content: m.content as string,
     })),

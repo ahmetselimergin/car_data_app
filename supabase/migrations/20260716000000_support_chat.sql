@@ -6,11 +6,12 @@ create table if not exists public.support_messages (
   user_id uuid not null references auth.users(id) on delete cascade,
   role text not null check (role in ('user', 'assistant')),
   content text not null,
+  seq bigint generated always as identity,
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_support_messages_user_created
-  on public.support_messages (user_id, created_at);
+create index if not exists idx_support_messages_user_seq
+  on public.support_messages (user_id, seq);
 
 alter table public.support_messages enable row level security;
 
