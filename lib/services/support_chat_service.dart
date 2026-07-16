@@ -57,18 +57,23 @@ class SupportChatService {
   /// Mesajı Edge Function'a yollar ve asistan cevabını döndürür.
   /// Geçmiş kaydı sunucu tarafında yapılır.
   Future<String> sendMessage(String message) async {
-    final FunctionResponse res = await _client.functions.invoke(
-      'support-chat',
-      body: <String, dynamic>{'message': message},
-    );
-    final dynamic data = res.data;
-    if (data is Map && data['reply'] is String) {
-      return data['reply'] as String;
+    try {
+      final FunctionResponse res = await _client.functions.invoke(
+        'support-chat',
+        body: <String, dynamic>{'message': message},
+      );
+      final dynamic data = res.data;
+      if (data is Map && data['reply'] is String) {
+        return data['reply'] as String;
+      }
+      throw Exception('Beklenmeyen yanıt');
+    } on FunctionException catch (e) {
+      final dynamic details = e.details;
+      if (details is Map && details['error'] is String) {
+        throw Exception(details['error'] as String);
+      }
+      throw Exception('Mesaj gönderilemedi');
     }
-    if (data is Map && data['error'] is String) {
-      throw Exception(data['error'] as String);
-    }
-    throw Exception('Beklenmeyen yanıt');
   }
 
   /// Çözülemeyen durumlar için destek talebi açar.
