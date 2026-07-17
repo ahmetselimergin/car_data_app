@@ -6,7 +6,7 @@ const corsHeaders: Record<string, string> = {
     'authorization, x-client-info, apikey, content-type',
 }
 
-const MODEL = 'gemini-2.0-flash'
+const MODEL = 'llama-3.3-70b-versatile'
 const HISTORY_LIMIT = 20
 const MAX_MESSAGE_LEN = 4000
 
@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  const geminiKey = Deno.env.get('GEMINI_API_KEY')
-  if (!supabaseUrl || !anonKey || !geminiKey) {
+  const groqKey = Deno.env.get('GROQ_API_KEY')
+  if (!supabaseUrl || !anonKey || !groqKey) {
     return json({ error: 'Server misconfigured' }, 500)
   }
 
@@ -93,39 +93,38 @@ Deno.serve(async (req) => {
     return json({ error: 'Geçmiş yüklenemedi' }, 500)
   }
 
-  // Gemini rolleri: kullanıcı 'user', asistan 'model'. DB'de 'assistant' saklanır.
+  // Groq OpenAI uyumlu format: system + geçmiş + yeni kullanıcı mesajı.
+  // DB rolleri 'user'/'assistant' Groq ile birebir uyumlu.
   const orderedHistory = (history ?? []).slice().reverse()
-  const geminiContents = [
+  const groqMessages = [
+    { role: 'system' as const, content: SYSTEM_PROMPT },
     ...orderedHistory.map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content as string }],
+      role: m.role as 'user' | 'assistant',
+      content: m.content as string,
     })),
-    { role: 'user' as const, parts: [{ text: message }] },
+    { role: 'user' as const, content: message },
   ]
 
-  // Gemini çağrısı
+  // Groq çağrısı (OpenAI uyumlu Chat Completions)
   let reply: string
   try {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-goog-api-key': geminiKey,
-        },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: geminiContents,
-          generationConfig: { maxOutputTokens: 1024 },
-        }),
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: `Bearer ${groqKey}`,
       },
-    )
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1024,
+        messages: groqMessages,
+      }),
+    })
     if (!resp.ok) {
       return json({ error: 'AI servisine ulaşılamadı' }, 502)
     }
     const data = await resp.json()
-    reply = (data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim()
+    reply = (data?.choices?.[0]?.message?.content ?? '').trim()
     if (!reply) {
       return json({ error: 'AI boş yanıt döndü' }, 502)
     }

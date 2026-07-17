@@ -28,7 +28,7 @@ Migration’lar: `supabase/migrations/`. Prod’da Auth kullanıcılarını Dash
 ## AI Destek Botu (support-chat)
 
 1. Migration’ı uygula: `supabase db push` (`support_messages`, `support_tickets`).
-2. Gemini anahtarını secret olarak ayarla (yalnız sunucuda; aistudio.google.com'dan ücretsiz):
-   `supabase secrets set GEMINI_API_KEY=...`
+2. Groq anahtarını secret olarak ayarla (yalnız sunucuda; console.groq.com'dan ücretsiz):
+   `supabase secrets set GROQ_API_KEY=gsk_...`
 3. Edge Function’ı dağıt: `supabase functions deploy support-chat`
-4. Model: `gemini-2.0-flash` (ücretsiz kat). `SUPABASE_URL`/`SUPABASE_ANON_KEY` otomatik enjekte edilir.
+4. Model: `llama-3.3-70b-versatile` (Groq, ücretsiz). `SUPABASE_URL`/`SUPABASE_ANON_KEY` otomatik enjekte edilir.
