@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:ms_undraw/ms_undraw.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/car_model.dart';
 import '../models/maintenance_model.dart';
@@ -24,6 +25,7 @@ import '../services/image_storage_service.dart';
 import '../services/locale_controller.dart';
 import '../services/home_widget_service.dart';
 import '../services/notification_service.dart';
+import '../services/update_service.dart';
 import '../utils/distance_format.dart';
 import '../services/session_controller.dart';
 import '../utils/car_image_normalize.dart';
@@ -74,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _future = _bootstrap();
+    unawaited(_checkForUpdate());
   }
 
   Future<_GarageData> _bootstrap() async {
@@ -83,6 +86,54 @@ class _HomeScreenState extends State<HomeScreen> {
     unawaited(_rescheduleAllNotifications(d));
     unawaited(_updateHomeWidget(d));
     return d;
+  }
+
+  /// Açılışta Supabase app_config'e bakıp gerekiyorsa güncelleme diyaloğu gösterir.
+  Future<void> _checkForUpdate() async {
+    final UpdateInfo info = await UpdateService().check();
+    if (!mounted || info.type == UpdateType.none) return;
+    await _showUpdateDialog(info);
+  }
+
+  Future<void> _showUpdateDialog(UpdateInfo info) async {
+    final bool forced = info.type == UpdateType.forced;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: !forced,
+      builder: (BuildContext ctx) {
+        return PopScope(
+          canPop: !forced,
+          child: AlertDialog(
+            title: Text(forced ? 'Güncelleme gerekli' : 'Yeni sürüm var'),
+            content: Text(
+              info.message ??
+                  (forced
+                      ? 'Devam etmek için uygulamayı güncellemelisin.'
+                      : 'Yeni bir sürüm mevcut. Güncellemeni öneririz.'),
+            ),
+            actions: <Widget>[
+              if (!forced)
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Şimdi değil'),
+                ),
+              FilledButton(
+                onPressed: () async {
+                  final String? url = info.storeUrl;
+                  if (url != null) {
+                    await launchUrl(
+                      Uri.parse(url),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  }
+                },
+                child: const Text('Güncelle'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _rescheduleAllNotifications(_GarageData data) async {

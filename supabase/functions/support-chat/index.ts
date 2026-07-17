@@ -6,7 +6,7 @@ const corsHeaders: Record<string, string> = {
     'authorization, x-client-info, apikey, content-type',
 }
 
-const MODEL = 'claude-haiku-4-5'
+const MODEL = 'llama-3.3-70b-versatile'
 const HISTORY_LIMIT = 20
 const MAX_MESSAGE_LEN = 4000
 
@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
-  if (!supabaseUrl || !anonKey || !anthropicKey) {
+  const groqKey = Deno.env.get('GROQ_API_KEY')
+  if (!supabaseUrl || !anonKey || !groqKey) {
     return json({ error: 'Server misconfigured' }, 500)
   }
 
@@ -93,8 +93,11 @@ Deno.serve(async (req) => {
     return json({ error: 'Geçmiş yüklenemedi' }, 500)
   }
 
+  // Groq OpenAI uyumlu format: system + geçmiş + yeni kullanıcı mesajı.
+  // DB rolleri 'user'/'assistant' Groq ile birebir uyumlu.
   const orderedHistory = (history ?? []).slice().reverse()
-  const claudeMessages = [
+  const groqMessages = [
+    { role: 'system' as const, content: SYSTEM_PROMPT },
     ...orderedHistory.map((m) => ({
       role: m.role as 'user' | 'assistant',
       content: m.content as string,
@@ -102,28 +105,26 @@ Deno.serve(async (req) => {
     { role: 'user' as const, content: message },
   ]
 
-  // Claude çağrısı
+  // Groq çağrısı (OpenAI uyumlu Chat Completions)
   let reply: string
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
+        Authorization: `Bearer ${groqKey}`,
       },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: claudeMessages,
+        messages: groqMessages,
       }),
     })
     if (!resp.ok) {
       return json({ error: 'AI servisine ulaşılamadı' }, 502)
     }
     const data = await resp.json()
-    reply = (data?.content?.[0]?.text ?? '').trim()
+    reply = (data?.choices?.[0]?.message?.content ?? '').trim()
     if (!reply) {
       return json({ error: 'AI boş yanıt döndü' }, 502)
     }
