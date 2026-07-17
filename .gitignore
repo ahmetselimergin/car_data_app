@@ -20,6 +20,12 @@ admin_desktop/dist/
 # Secrets
 .env
 
+# Android release imzalama — ASLA git'e girmemeli
+android/key.properties
+**/*.jks
+**/*.keystore
+/android/upload-keystore.jks
+
 # IntelliJ related
 *.iml
 *.ipr

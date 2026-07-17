@@ -1,0 +1,13 @@
+# Cardex uygulama ikonu üretimi.
+# Kullanım: 1024x1024 PNG logoyu assets/images/app_icon.png olarak koy,
+# sonra:  dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false            # Şimdilik yalnız Google Play; iOS'a geçince true yap
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  # Android 8+ adaptive ikon (arka plan rengi + ön plan logo).
+  # En iyi sonuç için logonun merkezdeki ~%66'lık güvenli alanda,
+  # kenarlarda şeffaf boşlukla olması önerilir.
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"

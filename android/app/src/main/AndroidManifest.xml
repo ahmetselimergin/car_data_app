@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
-        android:label="car_data_app"
+        android:label="Cardex"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <!-- En Yakın Tamirci haritası: Google Maps API anahtarını buraya yaz -->
